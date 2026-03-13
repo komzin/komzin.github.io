@@ -1,17 +1,23 @@
-# 🧪 My Projects
+# 🧪 My Weird Extensions
 
-I build random things on the internet — mostly browser extensions that make small problems disappear.
+Small experiments, mostly **browser extensions** that make everyday web tasks easier.
 
 ---
 
 # 🧩 Extensions
 
-## 📄 NotebookLM → PDF Exporter
+<table>
+<tr>
 
-Export your **NotebookLM notes and chats to PDF** easily.
+<td width="33%" align="center">
 
-<p>
-<a href="https://chromewebstore.google.com/detail/notebooklm-pdf-exporter/lgmcbgicieigdnicfjemooocjokahmcb?hl=en">
+### 📄 NotebookLM → PDF Exporter
+
+Export **NotebookLM notes and chats to PDF** instantly.
+
+<br>
+
+<a href="https://chromewebstore.google.com/detail/notebooklm-pdf-exporter/lgmcbgicieigdnicfjemooocjokahmcb">
 <img src="https://img.shields.io/badge/Chrome-Install-green?logo=googlechrome">
 </a>
 
@@ -22,22 +28,26 @@ Export your **NotebookLM notes and chats to PDF** easily.
 <a href="https://addons.mozilla.org/en-US/firefox/addon/notebooklm-to-pdf-exporter/">
 <img src="https://img.shields.io/badge/Firefox-Install-orange?logo=firefoxbrowser">
 </a>
-</p>
 
-**Features**
+<br><br>
 
-* Export NotebookLM notes as PDF
-* Export chats to PDF
-* Clean formatting
-* Fast one-click export
+<ul style="text-align:left;">
+<li>Export NotebookLM notes to PDF</li>
+<li>Export NotebookLM chats</li>
+<li>Clean formatting</li>
+<li>Fast one-click export</li>
+</ul>
 
----
+</td>
 
-## 🎧 BetterCallSlow
+<td width="33%" align="center">
 
-Add **slow + reverb audio effects** to platforms like YouTube, Spotify, and SoundCloud.
+### 🎧 BetterCallSlow
 
-<p>
+Add **slow + reverb audio effects** to streaming platforms.
+
+<br>
+
 <a href="https://chromewebstore.google.com/detail/bettercallslowslow-reverb/pidmlbkdglggfnpiaahbdnpmhaglcmij">
 <img src="https://img.shields.io/badge/Chrome-Install-green?logo=googlechrome">
 </a>
@@ -49,22 +59,26 @@ Add **slow + reverb audio effects** to platforms like YouTube, Spotify, and Soun
 <a href="https://microsoftedge.microsoft.com/addons/detail/bettercallslowslow-reve/kgkmkkcgffapaehdpkhodhiclcpockkj">
 <img src="https://img.shields.io/badge/Edge-Install-blue?logo=microsoftedge">
 </a>
-</p>
 
-**Features**
+<br><br>
 
-* Slow audio playback
-* Reverb effect
-* Works with multiple streaming platforms
-* Lightweight and simple
+<ul style="text-align:left;">
+<li>Slow audio playback</li>
+<li>Reverb sound effect</li>
+<li>Works with YouTube</li>
+<li>Supports Spotify & SoundCloud</li>
+</ul>
 
----
+</td>
 
-## 💬 Sidebar Comments for Reddit
+<td width="33%" align="center">
 
-View Reddit comments **without opening a new tab**.
+### 💬 Sidebar Comments for Reddit
 
-<p>
+Browse Reddit comments **without opening new tabs**.
+
+<br>
+
 <a href="https://chromewebstore.google.com/detail/sidebar-comments-for-redd/pnflajboonimbkihdmojfjifofmjmpol">
 <img src="https://img.shields.io/badge/Chrome-Install-green?logo=googlechrome">
 </a>
@@ -76,24 +90,33 @@ View Reddit comments **without opening a new tab**.
 <a href="https://microsoftedge.microsoft.com/addons/detail/sidebar-comments-for-redd/lhgncejhcelnfnfcagjhmionkefiiafn">
 <img src="https://img.shields.io/badge/Edge-Install-blue?logo=microsoftedge">
 </a>
-</p>
 
-**Features**
+<br><br>
 
-* Sidebar comment viewer
-* No need to open a new tab
-* Faster browsing experience
+<ul style="text-align:left;">
+<li>Sidebar comment viewer</li>
+<li>No need to open new tabs</li>
+<li>Faster Reddit browsing</li>
+</ul>
+
+</td>
+
+</tr>
+</table>
 
 ---
 
 # ⚙️ About
 
-I like building small tools that make the web slightly better.
+I build small tools and browser extensions that I'm sure no one is going to use lol.
 
-Most projects here are **browser extensions**, experiments, or random utilities.
 
 ---
 
-# 📬 Contact
+# 📬 Feedback
 
-If you have feedback, ideas, or bugs to report, feel free to open an **Issue**.
+Found a bug or have an idea, or you just want to chat?
+
+I will always listen to you, I'm your friend.
+
+slowreverb@tuta.io
