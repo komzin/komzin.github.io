@@ -317,7 +317,7 @@
       <div class="contact-block reveal">
         <div class="contact-text">
           <div class="big">I'm always<br><em>listening.</em></div>
-          <p>Found a bug, have an idea, or just want to chat? I'll actually read it and reply.</p>
+          <p>Found a bug, have an idea, or just want to chat? I'll actually read it. I'm your friend. 💙</p>
         </div>
         <div class="contact-info">
           <div class="contact-item">
@@ -357,7 +357,7 @@
       themeLabel.textContent = t === 'dark' ? 'Dark' : 'Light';
       localStorage.setItem('theme', t);
     }
-    setTheme(localStorage.getItem('theme') || 'dark');
+    setTheme(localStorage.getItem('theme') || 'light');
     themeBtn.addEventListener('click', () => setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
 
     // CAROUSEL
