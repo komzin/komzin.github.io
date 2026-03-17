@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Reading List Exporter — Export Chrome Reading List to HTML in One Click</title>
+  <meta name="description" content="Export your Chrome or Brave reading list to a beautifully formatted HTML file. Group by domain, filter read vs unread. Free browser extension — 100% local, no account needed." />
+  <meta name="keywords" content="chrome reading list export, export chrome reading list, save chrome reading list, chrome reading list to html, brave reading list export, reading list exporter extension, chrome bookmarks export" />
+  <link rel="canonical" href="https://komzin.github.io/reading-list-exporter/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Reading List Exporter — Export Chrome Reading List in One Click" />
+  <meta property="og:description" content="Free Chrome extension that exports your entire reading list to a clean, searchable HTML file. Group by domain, filter by status. 100% local processing." />
+  <meta property="og:url" content="https://komzin.github.io/reading-list-exporter/" />
+  <meta property="og:image" content="https://lh3.googleusercontent.com/734ThphnzRG27tovl8M8kEYhHY149JVnruZEzGf4VqWnZDkrtoqqmCk3zUd7MxBdZSLalgFE3qX79Jl1yCJcRZ7GpA=s60" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Reading List Exporter for Chrome & Brave" />
+  <meta name="twitter:description" content="Export your Chrome reading list to a clean HTML file in one click. Free, private, no sign-up." />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Reading List Exporter",
+    "operatingSystem": "Chrome, Brave",
+    "applicationCategory": "BrowserApplication",
+    "description": "Export your Chrome or Brave reading list to a beautifully formatted HTML file. Group by domain, filter read vs unread. Free, 100% local.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "komzin",
+      "url": "https://komzin.github.io"
+    },
+    "downloadUrl": "https://chromewebstore.google.com/detail/reading-list-exporter/cajgnoiikhbihadllgipbhmcaiobnkmf"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do I export my Chrome reading list?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Install Reading List Exporter from the Chrome Web Store. Click the extension icon in your toolbar and hit 'Export to HTML'. Your full reading list downloads as a formatted HTML file instantly."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it work on Brave browser?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Reading List Exporter works on any Chromium-based browser including Brave, Chrome, and Edge (via Chrome Web Store)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What does 'group by domain' do?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "When enabled, your exported HTML groups all saved articles by their domain (e.g. all github.com links together, all medium.com links together). A sidebar navigation lets you jump between domains instantly."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my reading list data uploaded anywhere?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Everything is processed 100% locally in your browser. Your reading list never leaves your device — there are no servers involved."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is it free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, completely free. No subscription, no account, no limits."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I re-import the exported file?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The exported HTML file is self-contained and fully interactive — clickable links, collapsible sections, and domain sidebar. You can open it in any browser at any time without needing the extension."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f7f4ee;
+      --surface:  #efebe2;
+      --surface2: #e5e0d5;
+      --border:   rgba(0,0,0,0.08);
+      --border2:  rgba(0,0,0,0.14);
+      --text:     #1a1712;
+      --muted:    #7a7465;
+      --accent:   #c75000;
+      --accent-l: #fdf0e8;
+      --accent-t: rgba(199,80,0,0.08);
+      --red:      #c0392b;
+      --red-l:    #fdf0ee;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Geist', sans-serif; font-weight: 300; line-height: 1.6; overflow-x: hidden; }
+
+    body::after {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 32px; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(247,244,238,0.92); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+    .nav-brand img { width: 24px; height: 24px; border-radius: 6px; }
+    .nav-brand span { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--accent); color: #fff;
+      font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 9px 18px; border-radius: 2px; text-decoration: none;
+      transition: filter 0.2s;
+    }
+    .nav-cta:hover { filter: brightness(1.12); }
+
+    /* HERO */
+    .hero { padding: 80px 0 72px; border-bottom: 1px solid var(--border); }
+    .hero-inner { display: grid; grid-template-columns: 1fr auto; gap: 64px; align-items: center; }
+
+    .hero-kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px;
+      background: var(--accent-l); padding: 5px 12px; border-radius: 2px;
+    }
+    .hero-kicker::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    .hero-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(38px, 5vw, 62px);
+      line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 20px;
+    }
+    .hero-title em { font-style: italic; color: var(--accent); }
+    .hero-sub { font-size: 16px; color: var(--muted); line-height: 1.75; max-width: 480px; margin-bottom: 36px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 32px; }
+
+    .btn-install {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--accent); color: #fff;
+      font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 14px 26px; border-radius: 2px; text-decoration: none;
+      transition: filter 0.2s, box-shadow 0.2s;
+    }
+    .btn-install:hover { filter: brightness(1.1); box-shadow: 0 4px 20px rgba(199,80,0,0.25); }
+    .btn-install img { width: 16px; height: 16px; filter: brightness(10); }
+
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border2); color: var(--muted);
+      font-family: 'Geist Mono', monospace; font-size: 12px;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 13px 22px; border-radius: 2px; text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+    .btn-ghost img { width: 15px; height: 15px; }
+
+    .hero-trust {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted);
+    }
+    .hero-trust::before { content: '✓'; color: var(--accent); font-size: 12px; font-weight: 600; }
+
+    /* hero visual — popup mockup */
+    .hero-visual {
+      width: 280px; flex-shrink: 0;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+    }
+    .visual-bar {
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .vb-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .vb-dot:nth-child(1) { background: #ff5f57; }
+    .vb-dot:nth-child(2) { background: #febc2e; }
+    .vb-dot:nth-child(3) { background: #28c840; }
+    .vb-url { flex: 1; background: var(--bg); border-radius: 3px; padding: 4px 10px; font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--muted); margin-left: 6px; }
+
+    /* popup body */
+    .popup-body { padding: 20px 18px; }
+    .popup-header { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 2px; font-family: 'Geist Mono', monospace; }
+    .popup-sub { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; font-family: 'Geist Mono', monospace; }
+    .popup-stat {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .popup-stat-label { font-size: 11px; color: var(--muted); font-family: 'Geist Mono', monospace; }
+    .popup-stat-value { font-size: 16px; font-weight: 700; color: var(--accent); font-family: 'Geist Mono', monospace; }
+    .popup-option {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text); margin-bottom: 14px;
+      font-family: 'Geist', sans-serif;
+    }
+    .popup-checkbox {
+      width: 14px; height: 14px; border-radius: 3px;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .popup-checkbox::after { content: '✓'; color: #fff; font-size: 9px; }
+    .popup-btn {
+      width: 100%; padding: 11px;
+      background: var(--accent); color: #fff; border-radius: 4px;
+      font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.04em; text-align: center;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(199,80,0,0); } 50% { box-shadow: 0 0 0 6px rgba(199,80,0,0.15); } }
+
+    /* PROBLEM BANNER */
+    .problem-bar {
+      background: var(--red-l); border: 1px solid rgba(192,57,43,0.15);
+      padding: 20px 28px; border-radius: 3px; margin: 48px 0;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .problem-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .problem-bar p { font-size: 14px; line-height: 1.65; color: #7a2c22; }
+    .problem-bar strong { color: var(--red); }
+
+    /* SECTIONS */
+    .section { padding: 72px 0; border-top: 1px solid var(--border); }
+    .section-kicker { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(28px, 4vw, 44px); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .section-title em { font-style: italic; color: var(--accent); }
+    .section-sub { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 560px; margin-bottom: 48px; }
+
+    /* HOW IT WORKS */
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; top: 22px; left: 0; right: 0; height: 1px;
+      background: repeating-linear-gradient(to right, var(--border2) 0, var(--border2) 8px, transparent 8px, transparent 16px);
+      z-index: 0;
+    }
+    .step { padding: 0 20px 0 0; position: relative; z-index: 1; }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 500; color: var(--accent);
+      margin-bottom: 20px;
+    }
+    .step-title { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 8px; }
+    .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* FEATURES */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 32px; }
+    .feat { background: var(--surface); padding: 20px 22px; border-top: 2px solid transparent; transition: border-color 0.25s, background 0.2s; }
+    .feat:hover { background: var(--surface2); border-top-color: var(--accent); }
+    .feat-icon { font-size: 18px; margin-bottom: 12px; display: block; }
+    .feat-title { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 6px; }
+    .feat-desc { font-size: 12px; color: var(--muted); line-height: 1.65; }
+
+    /* OUTPUT PREVIEW */
+    .output-preview {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 3px; overflow: hidden; margin-top: 48px;
+    }
+    .op-bar {
+      background: var(--surface2); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .op-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .op-dot:nth-child(1) { background: #ff5f57; }
+    .op-dot:nth-child(2) { background: #febc2e; }
+    .op-dot:nth-child(3) { background: #28c840; }
+    .op-title { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); margin-left: 8px; }
+    .op-body { padding: 24px; display: grid; grid-template-columns: 200px 1fr; gap: 0; }
+    .op-sidebar { border-right: 1px solid var(--border); padding-right: 20px; }
+    .op-sidebar-title { font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+    .op-nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; border-radius: 5px; margin-bottom: 3px;
+      font-size: 11px; color: var(--text); font-family: 'Geist Mono', monospace;
+    }
+    .op-nav-item.active { background: var(--accent-l); color: var(--accent); }
+    .op-nav-dot { width: 12px; height: 12px; border-radius: 3px; background: var(--surface2); flex-shrink: 0; }
+    .op-nav-count { margin-left: auto; font-size: 9px; color: var(--muted); }
+    .op-main { padding-left: 24px; }
+    .op-section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); font-family: 'Geist Mono', monospace; display: flex; align-items: center; gap: 8px; }
+    .op-badge { font-size: 9px; background: var(--surface2); padding: 2px 7px; border-radius: 999px; color: var(--muted); }
+    .op-item {
+      background: #fff; border-radius: 6px; padding: 10px 14px;
+      margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+      border-left: 3px solid var(--accent);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .op-item-icon { width: 14px; height: 14px; border-radius: 3px; background: var(--surface2); flex-shrink: 0; }
+    .op-item-text { flex: 1; min-width: 0; }
+    .op-item-title { font-size: 11px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .op-item-url { font-size: 9px; color: var(--muted); font-family: 'Geist Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .op-item-date { font-size: 9px; color: var(--muted); flex-shrink: 0; font-family: 'Geist Mono', monospace; }
+
+    /* USE CASES */
+    .usecases { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+    .uc { background: var(--surface); padding: 32px; display: flex; gap: 20px; align-items: flex-start; }
+    .uc-icon-wrap { width: 40px; height: 40px; border-radius: 8px; background: var(--accent-l); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .uc-title { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 6px; }
+    .uc-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+    /* INSTALL STRIP */
+    .install-strip {
+      background: var(--surface); border: 1px solid var(--border2);
+      padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; gap: 32px;
+      border-radius: 3px; margin: 48px 0 0;
+    }
+    .install-strip h3 { font-family: 'Instrument Serif', serif; font-size: 24px; margin-bottom: 6px; }
+    .install-strip p { font-size: 13px; color: var(--muted); }
+    .install-browsers { display: flex; gap: 10px; }
+    .ib {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg); border: 1px solid var(--border2);
+      padding: 10px 16px; border-radius: 3px; text-decoration: none; color: var(--text);
+      font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.03em; transition: border-color 0.2s, background 0.2s;
+    }
+    .ib:hover { border-color: var(--accent); background: var(--accent-l); }
+    .ib img { width: 16px; height: 16px; }
+
+    /* PRIVACY */
+    .privacy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .prv { background: var(--surface); padding: 28px 24px; }
+    .prv-title { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.03em; }
+    .prv-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+    /* FAQ */
+    .faq-list { display: flex; flex-direction: column; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q {
+      width: 100%; background: none; border: none; cursor: pointer;
+      padding: 22px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: var(--text);
+      text-align: left; transition: color 0.2s;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-chevron { font-size: 12px; color: var(--muted); transition: transform 0.25s; flex-shrink: 0; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-a {
+      overflow: hidden; max-height: 0;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+      font-size: 14px; color: var(--muted); line-height: 1.75;
+    }
+    .faq-item.open .faq-a { max-height: 200px; padding-bottom: 20px; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 28px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-brand { display: flex; align-items: center; gap: 8px; }
+    .footer-brand img { width: 20px; height: 20px; border-radius: 5px; }
+    .footer-brand span { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .footer-links a { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.03em; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
+
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-in.visible { opacity: 1; transform: none; }
+
+    @media (max-width: 800px) {
+      .wrap { padding: 0 20px; }
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .features-grid, .steps, .privacy-grid { grid-template-columns: 1fr; }
+      .usecases { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .install-strip { flex-direction: column; padding: 28px 24px; }
+      .install-browsers { flex-wrap: wrap; }
+      .op-body { grid-template-columns: 1fr; }
+      .op-sidebar { display: none; }
+      nav { padding: 12px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-brand">
+      <img src="https://lh3.googleusercontent.com/734ThphnzRG27tovl8M8kEYhHY149JVnruZEzGf4VqWnZDkrtoqqmCk3zUd7MxBdZSLalgFE3qX79Jl1yCJcRZ7GpA=s60" alt="Reading List Exporter icon" />
+      <span>Reading List Exporter</span>
+    </a>
+    <a href="https://chromewebstore.google.com/detail/reading-list-exporter/cajgnoiikhbihadllgipbhmcaiobnkmf" target="_blank" class="nav-cta">
+      Add to Chrome — Free
+    </a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-kicker">Free Chrome & Brave Extension</div>
+          <h1 class="hero-title">Export your reading list<br><em>in one click.</em></h1>
+          <p class="hero-sub">Chrome hides your reading list behind a panel with no export option. This extension exports everything to a clean, searchable HTML file — grouped by domain, sorted by date, fully yours.</p>
+          <div class="hero-actions">
+            <a href="https://chromewebstore.google.com/detail/reading-list-exporter/cajgnoiikhbihadllgipbhmcaiobnkmf" target="_blank" class="btn-install">
+              <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" />
+              Add to Chrome — Free
+            </a>
+          </div>
+          <div class="hero-trust">Free forever &nbsp;·&nbsp; No account &nbsp;·&nbsp; 100% local processing</div>
+        </div>
+
+        <!-- popup mockup -->
+        <div class="hero-visual" aria-hidden="true">
+          <div class="visual-bar">
+            <div class="vb-dot"></div><div class="vb-dot"></div><div class="vb-dot"></div>
+            <div class="vb-url">Extension Popup</div>
+          </div>
+          <div class="popup-body">
+            <div class="popup-header">Reading List</div>
+            <div class="popup-sub">Export Utility</div>
+            <div class="popup-stat">
+              <span class="popup-stat-label">Items Found</span>
+              <span class="popup-stat-value">47</span>
+            </div>
+            <div class="popup-option">
+              <div class="popup-checkbox"></div>
+              Group by Domain
+            </div>
+            <div class="popup-btn">Export to HTML</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-bar">
+        <div class="problem-icon">⚠️</div>
+        <p><strong>Chrome's reading list has no native export.</strong> Close the browser, switch devices, or lose access — and your list is gone or stuck. This extension gives you a permanent, portable backup in seconds.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">How it works</div>
+        <h2 class="section-title">Four steps to your <em>first export</em></h2>
+        <p class="section-sub">From install to a fully formatted HTML file in under a minute.</p>
+      </div>
+      <div class="steps fade-in">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">Install the extension</div>
+          <p class="step-desc">Add it from the Chrome Web Store. Works on Chrome and Brave. No account needed.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">Click the icon</div>
+          <p class="step-desc">Open the extension popup from your browser toolbar. Your item count loads instantly.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Choose options</div>
+          <p class="step-desc">Optionally enable "Group by Domain" to organize your links by website.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-title">Export to HTML</div>
+          <p class="step-desc">Click export. A fully interactive HTML file downloads instantly — no servers, no uploads.</p>
+        </div>
+      </div>
+
+      <div class="install-strip fade-in">
+        <div>
+          <h3>Ready to back up your reading list?</h3>
+          <p>Free, takes 20 seconds to install, works immediately.</p>
+        </div>
+        <div class="install-browsers">
+          <a href="https://chromewebstore.google.com/detail/reading-list-exporter/cajgnoiikhbihadllgipbhmcaiobnkmf" target="_blank" class="ib">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="Chrome" /> Chrome
+          </a>
+          <a href="https://chromewebstore.google.com/detail/reading-list-exporter/cajgnoiikhbihadllgipbhmcaiobnkmf" target="_blank" class="ib">
+            <img src="https://brave.com/favicon.ico" alt="Brave" /> Brave
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Features</div>
+        <h2 class="section-title">Everything you need to <em>save your list</em></h2>
+      </div>
+      <div class="features-grid fade-in">
+        <div class="feat">
+          <span class="feat-icon">⚡</span>
+          <div class="feat-title">One-Click Export</div>
+          <p class="feat-desc">Click once, full HTML file downloads instantly.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🗂️</span>
+          <div class="feat-title">Group by Domain</div>
+          <p class="feat-desc">Organizes links by website with a sticky sidebar nav.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">📬</span>
+          <div class="feat-title">Read / Unread Split</div>
+          <p class="feat-desc">Separate sections for read and unread items.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🔒</span>
+          <div class="feat-title">100% Private</div>
+          <p class="feat-desc">Everything stays local. No servers, no tracking.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🕐</span>
+          <div class="feat-title">Sorted by Date</div>
+          <p class="feat-desc">Newest items first — with "Added on" timestamps.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">💸</span>
+          <div class="feat-title">Free Forever</div>
+          <p class="feat-desc">No subscription, no limits, no catch.</p>
+        </div>
+      </div>
+
+      <!-- output preview -->
+      <div class="output-preview fade-in">
+        <div class="op-bar">
+          <div class="op-dot"></div><div class="op-dot"></div><div class="op-dot"></div>
+          <span class="op-title">Chrome_Reading_List_2025-03-18.html</span>
+        </div>
+        <div class="op-body">
+          <div class="op-sidebar">
+            <div class="op-sidebar-title">Domain Map</div>
+            <div class="op-nav-item active">
+              <div class="op-nav-dot" style="background:#c75000;"></div>
+              github.com
+              <span class="op-nav-count">12</span>
+            </div>
+            <div class="op-nav-item">
+              <div class="op-nav-dot"></div>
+              medium.com
+              <span class="op-nav-count">8</span>
+            </div>
+            <div class="op-nav-item">
+              <div class="op-nav-dot"></div>
+              news.ycombinator
+              <span class="op-nav-count">6</span>
+            </div>
+            <div class="op-nav-item">
+              <div class="op-nav-dot"></div>
+              arxiv.org
+              <span class="op-nav-count">5</span>
+            </div>
+          </div>
+          <div class="op-main">
+            <div class="op-section-title">github.com <span class="op-badge">12 items</span></div>
+            <div class="op-item">
+              <div class="op-item-icon"></div>
+              <div class="op-item-text">
+                <div class="op-item-title">awesome-selfhosted — A list of Free Software network services</div>
+                <div class="op-item-url">github.com/awesome-selfhosted/awesome-selfhosted</div>
+              </div>
+              <div class="op-item-date">Mar 14</div>
+            </div>
+            <div class="op-item">
+              <div class="op-item-icon"></div>
+              <div class="op-item-text">
+                <div class="op-item-title">shadcn/ui — Beautifully designed components</div>
+                <div class="op-item-url">github.com/shadcn-ui/ui</div>
+              </div>
+              <div class="op-item-date">Mar 12</div>
+            </div>
+            <div class="op-item">
+              <div class="op-item-icon"></div>
+              <div class="op-item-text">
+                <div class="op-item-title">ollama — Get up and running with large language models</div>
+                <div class="op-item-url">github.com/ollama/ollama</div>
+              </div>
+              <div class="op-item-date">Mar 10</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USE CASES -->
+  <section class="section" id="use-cases">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Who uses it</div>
+        <h2 class="section-title">For anyone who <em>saves links seriously</em></h2>
+      </div>
+      <div class="usecases fade-in">
+        <div class="uc">
+          <div class="uc-icon-wrap">🧑‍💻</div>
+          <div>
+            <div class="uc-title">Developers & Researchers</div>
+            <p class="uc-desc">Save articles, docs, and GitHub repos while browsing. Export your list weekly as a portable archive you can open anywhere, anytime.</p>
+          </div>
+        </div>
+        <div class="uc">
+          <div class="uc-icon-wrap">📚</div>
+          <div>
+            <div class="uc-title">Students & Knowledge Workers</div>
+            <p class="uc-desc">Build a reading backlog across devices. Export and re-import your list when switching browsers or computers without losing anything.</p>
+          </div>
+        </div>
+        <div class="uc">
+          <div class="uc-icon-wrap">🗞️</div>
+          <div>
+            <div class="uc-title">Journalists & Writers</div>
+            <p class="uc-desc">Queue up sources, references, and inspiration. Export by domain to see at a glance how many articles you've saved from each outlet.</p>
+          </div>
+        </div>
+        <div class="uc">
+          <div class="uc-icon-wrap">🔁</div>
+          <div>
+            <div class="uc-title">Browser Switchers</div>
+            <p class="uc-desc">Moving from Chrome to Brave or vice versa? Export your full reading list first and keep every link, title, and date intact.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Privacy</div>
+        <h2 class="section-title">Your links stay <em>yours.</em></h2>
+        <p class="section-sub">Your reading list is personal. This extension was built to keep it that way.</p>
+      </div>
+      <div class="privacy-grid fade-in">
+        <div class="prv">
+          <div class="prv-title">Local Processing Only</div>
+          <p class="prv-desc">The HTML file is generated entirely in your browser. No content is ever sent to any server.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">No Data Collection</div>
+          <p class="prv-desc">Zero analytics, zero usage tracking. The extension reads your reading list and does exactly one thing with it: export it.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">No Account Required</div>
+          <p class="prv-desc">Install and use immediately. No email, no sign-up, no permissions beyond what's strictly necessary.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">FAQ</div>
+        <h2 class="section-title">Common <em>questions</em></h2>
+      </div>
+      <div class="faq-list fade-in">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            How do I export my Chrome reading list?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Install Reading List Exporter from the Chrome Web Store. Click the extension icon in your toolbar and hit "Export to HTML". Your full reading list downloads as a formatted HTML file instantly.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Does it work on Brave?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes. Brave is Chromium-based and supports Chrome extensions. Install it from the Chrome Web Store and it works identically on Brave.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            What does "Group by Domain" do?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">When enabled, your exported HTML groups all saved articles by their domain — all github.com links together, all medium.com links together, and so on. A sticky sidebar lets you jump between domains instantly.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Is my reading list data uploaded anywhere?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">No. Everything is processed 100% locally in your browser. Your reading list never leaves your device — there are no servers involved at all.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Is the exported file usable without the extension?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes. The exported HTML file is completely self-contained — clickable links, collapsible sections, and domain sidebar all work in any browser. You never need the extension to use the exported file.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Is it free?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes, completely free. No subscription, no account, no usage limits. It will stay free.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="section">
+    <div class="wrap">
+      <div class="install-strip fade-in" style="text-align:center; display:block; padding: 56px 48px;">
+        <p style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:14px;">Get started now</p>
+        <h2 style="font-family:'Instrument Serif',serif; font-size:clamp(28px,4vw,44px); letter-spacing:-0.02em; margin-bottom:12px;">Stop losing your reading list.</h2>
+        <p style="font-size:15px; color:var(--muted); max-width:440px; margin: 0 auto 32px; line-height:1.7;">Install in 20 seconds. Export your first list in under a minute. Free, forever.</p>
+        <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+          <a href="https://chromewebstore.google.com/detail/reading-list-exporter/cajgnoiikhbihadllgipbhmcaiobnkmf" target="_blank" class="btn-install">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" /> Add to Chrome — Free
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="wrap">
+    <footer>
+      <div class="footer-brand">
+        <img src="https://lh3.googleusercontent.com/734ThphnzRG27tovl8M8kEYhHY149JVnruZEzGf4VqWnZDkrtoqqmCk3zUd7MxBdZSLalgFE3qX79Jl1yCJcRZ7GpA=s60" alt="" />
+        <span>Reading List Exporter — by <a href="https://komzin.github.io" style="color:var(--accent); text-decoration:none;">komzin</a></span>
+      </div>
+      <div class="footer-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://komzin.github.io">More extensions</a>
+        <a href="mailto:slowreverb@tuta.io">Contact</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+        btn.setAttribute('aria-expanded', !isOpen);
+      });
+    });
+
+    const els = document.querySelectorAll('.fade-in');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 80);
+      });
+    }, { threshold: 0.08 });
+    els.forEach(el => io.observe(el));
+  </script>
+</body>
+</html>
