@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-site-verification" content="Vah3jRHjSLwBq2Tf1b84hNEF-T_tASnOJYihFCV7X2I" />  
+  <meta name="google-site-verification" content="googleedc1ddff028657b2" />
+  <title>NotebookLM PDF Exporter — Export NotebookLM Chats & Notes to PDF in One Click</title>
+  <meta name="description" content="Export NotebookLM chats and notes to beautifully formatted PDFs instantly. Free browser extension for Chrome, Edge & Firefox. No sign-up, no server uploads — 100% local processing." />
+  <meta name="keywords" content="notebooklm pdf, export notebooklm to pdf, notebooklm pdf download, save notebooklm chat, notebooklm export, notebooklm notes to pdf, notebooklm chrome extension, notebooklm firefox extension" />
+  <link rel="canonical" href="https://komzin.github.io/notebooklm-pdf-exporter/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="NotebookLM PDF Exporter — Export Chats & Notes to PDF in One Click" />
+  <meta property="og:description" content="Free browser extension that exports your NotebookLM chats and notes to perfectly formatted PDFs. Works on Chrome, Edge & Firefox. 100% local — nothing leaves your browser." />
+  <meta property="og:url" content="https://komzin.github.io/notebooklm-pdf-exporter/" />
+  <meta property="og:image" content="https://whale-store.pstatic.net/20260313_55/1773396258167RGlP1_PNG/iconSize.png" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="NotebookLM PDF Exporter" />
+  <meta name="twitter:description" content="Export your NotebookLM chats and notes to PDF in one click. Free, private, no sign-up." />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: #222222;
+      --text: #e8e8e8;
+      --muted: #888888;
+      --accent: #7c6af7;
+      --accent-soft: rgba(124,106,247,0.12);
+      --radius: 12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 15px; }
+    .nav-brand img { width: 28px; height: 28px; border-radius: 6px; }
+    .nav-cta {
+      background: var(--accent); color: #fff; text-decoration: none;
+      padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ── Hero ── */
+    .hero { padding: 80px 0 48px; }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;
+    }
+    .hero-kicker {
+      display: inline-block;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent); background: var(--accent-soft);
+      padding: 5px 12px; border-radius: 20px; margin-bottom: 18px;
+    }
+    .hero-title {
+      font-size: clamp(32px, 4.5vw, 52px);
+      font-weight: 800; letter-spacing: -0.03em; line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero-title em { font-style: italic; color: var(--accent); }
+    .hero-sub { font-size: 16px; color: var(--muted); line-height: 1.7; margin-bottom: 32px; max-width: 480px; }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .hero-trust { font-size: 12px; color: var(--muted); }
+
+    /* ── Buttons ── */
+    .btn-install, .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      text-decoration: none; font-size: 14px; font-weight: 600;
+      padding: 11px 22px; border-radius: 9px; transition: all 0.2s;
+    }
+    .btn-install { background: var(--accent); color: #fff; }
+    .btn-install:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-install img, .btn-ghost img { width: 16px; height: 16px; border-radius: 3px; }
+
+    /* ── Hero Visual ── */
+    .hero-visual {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+    .visual-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .vb-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .vb-url { font-size: 11px; color: var(--muted); margin-left: 8px; }
+    .visual-body { padding: 20px; }
+
+    /* ── Problem Bar ── */
+    .problem-bar {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: rgba(255,180,0,0.06); border: 1px solid rgba(255,180,0,0.18);
+      border-radius: var(--radius); padding: 18px 22px; margin-top: 48px;
+      font-size: 14px; line-height: 1.6; color: var(--muted);
+    }
+    .problem-bar strong { color: var(--text); }
+    .problem-icon { font-size: 18px; flex-shrink: 0; }
+
+    /* ── Section ── */
+    .section { padding: 80px 0; border-top: 1px solid var(--border); }
+    .section-kicker {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(24px, 3vw, 38px); font-weight: 800;
+      letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 14px;
+    }
+    .section-title em { font-style: italic; color: var(--accent); }
+    .section-sub { font-size: 15px; color: var(--muted); max-width: 540px; line-height: 1.7; }
+
+    /* ── Steps ── */
+    .steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-top: 48px; }
+    .step {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 22px;
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent-soft); color: var(--accent);
+      font-weight: 800; font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .step-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+    .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── Features Grid ── */
+    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 32px; }
+    .feat {
+      background: var(--surface); padding: 20px 22px;
+      border: 1px solid var(--border); border-radius: 4px;
+    }
+    .feat-icon { font-size: 18px; display: block; margin-bottom: 10px; }
+    .feat-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+    .feat-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* ── Use Cases ── */
+    .usecases { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-top: 40px; }
+    .uc {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+    }
+    .uc-icon-wrap { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .uc-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .uc-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── Privacy Grid ── */
+    .privacy-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .prv {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 26px;
+    }
+    .prv-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; color: var(--text); }
+    .prv-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── FAQ ── */
+    .faq-list { margin-top: 40px; display: flex; flex-direction: column; gap: 4px; }
+    .faq-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .faq-q {
+      width: 100%; background: none; border: none; color: var(--text);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 22px; font-size: 15px; font-weight: 600;
+      cursor: pointer; text-align: left; gap: 16px;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-chevron { font-size: 14px; color: var(--muted); transition: transform 0.25s; flex-shrink: 0; }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      font-size: 14px; color: var(--muted); line-height: 1.7;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 22px;
+    }
+    .faq-item.open .faq-a { max-height: 200px; padding: 0 22px 18px; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+    /* ── Install Strip ── */
+    .install-strip {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px 36px; margin-top: 56px;
+    }
+    .install-strip h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .install-strip p { font-size: 14px; color: var(--muted); }
+    .install-browsers { display: flex; gap: 10px; flex-wrap: wrap; }
+    .ib {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); text-decoration: none;
+      padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .ib:hover { border-color: var(--accent); color: var(--accent); }
+    .ib img { width: 16px; height: 16px; border-radius: 3px; }
+
+    /* ── Footer ── */
+    footer {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      padding: 32px 0; border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--muted);
+    }
+    .footer-brand { display: flex; align-items: center; gap: 8px; }
+    .footer-brand img { width: 22px; height: 22px; border-radius: 5px; }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .footer-links a { color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── Fade-in animation ── */
+    .fade-in { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      .steps { grid-template-columns: repeat(2,1fr); }
+      .features-grid { grid-template-columns: repeat(2,1fr); }
+      .usecases { grid-template-columns: 1fr; }
+      .privacy-grid { grid-template-columns: 1fr; }
+      .install-strip { flex-direction: column; align-items: flex-start; }
+      footer { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .steps { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-brand">
+      <img src="https://whale-store.pstatic.net/20260313_55/1773396258167RGlP1_PNG/iconSize.png" alt="NotebookLM PDF Exporter icon" />
+      <span>NotebookLM PDF Exporter</span>
+    </a>
+    <a href="https://chromewebstore.google.com/detail/notebooklm-pdf-exporter/lgmcbgicieigdnicfjemooocjokahmcb" target="_blank" class="nav-cta">
+      Add to Chrome — Free
+    </a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-kicker">Free Browser Extension</div>
+          <h1 class="hero-title">Export NotebookLM<br>to PDF <em>in one click.</em></h1>
+          <p class="hero-sub">NotebookLM doesn't let you save chats as PDF. This extension does. Install once, export any conversation or note instantly — formatted, private, no account needed.</p>
+          <div class="hero-actions">
+            <a href="https://chromewebstore.google.com/detail/notebooklm-pdf-exporter/lgmcbgicieigdnicfjemooocjokahmcb?authuser=1&hl=en" target="_blank" class="btn-install">
+              <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" />
+              Add to Chrome — Free
+            </a>
+            <a href="https://addons.mozilla.org/en-US/firefox/addon/notebooklm-to-pdf-exporter/" target="_blank" class="btn-ghost">
+              <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="" />
+              Firefox
+            </a>
+            <a href="https://microsoftedge.microsoft.com/addons/detail/notebooklm-pdf-exporter/omlcfgmkkcncipknajloambgjfjnlhja" target="_blank" class="btn-ghost">
+              <img src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="" />
+              Edge
+            </a>
+          </div>
+          <div class="hero-trust">Free forever &nbsp;·&nbsp; No account &nbsp;·&nbsp; 100% local processing</div>
+        </div>
+
+        <!-- mock UI -->
+        <div class="hero-visual" aria-hidden="true">
+          <div class="visual-bar">
+            <div class="vb-dot"></div><div class="vb-dot"></div><div class="vb-dot"></div>
+            <div class="vb-url">notebooklm.google.com</div>
+          </div>
+          <div class="visual-body" style="padding:0; overflow:hidden;">
+            <img src="https://gcdnb.pbrd.co/images/dzjQtrfy5v4Q.png?o=1" alt="NotebookLM PDF Exporter in action" style="width:100%; height:auto; display:block;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- problem -->
+      <div class="problem-bar">
+        <div class="problem-icon">⚠️</div>
+        <p><strong>NotebookLM's native export goes to Google Docs only.</strong> No PDF. No plain text. No way to save your chat history. This extension fills that gap — works directly in your browser, nothing uploaded to any server.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">How it works</div>
+        <h2 class="section-title">Four steps to your <em>first PDF</em></h2>
+        <p class="section-sub">From install to exported PDF in under two minutes.</p>
+      </div>
+      <div class="steps fade-in">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">Install the extension</div>
+          <p class="step-desc">Add it from the Chrome Web Store, Firefox Add-ons, or Edge Add-ons. No account needed.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">Open NotebookLM</div>
+          <p class="step-desc">Go to notebooklm.google.com and open any notebook with chats or notes you want to save.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Click Export to PDF</div>
+          <p class="step-desc">The button appears in your toolbar. One click starts the export — no options to configure.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-title">Save your PDF</div>
+          <p class="step-desc">A perfectly formatted PDF downloads to your device instantly, ready to archive, share, or re-import.</p>
+        </div>
+      </div>
+
+      <div class="install-strip fade-in">
+        <div>
+          <h3>Ready to export your first notebook?</h3>
+          <p>Free, takes 30 seconds to install, works immediately.</p>
+        </div>
+        <div class="install-browsers">
+          <a href="https://chromewebstore.google.com/detail/notebooklm-pdf-exporter/lgmcbgicieigdnicfjemooocjokahmcb?authuser=1&hl=en" target="_blank" class="ib">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="Chrome" /> Chrome
+          </a>
+          <a href="https://microsoftedge.microsoft.com/addons/detail/notebooklm-pdf-exporter/omlcfgmkkcncipknajloambgjfjnlhja" target="_blank" class="ib">
+            <img src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="Edge" /> Edge
+          </a>
+          <a href="https://addons.mozilla.org/en-US/firefox/addon/notebooklm-to-pdf-exporter/" target="_blank" class="ib">
+            <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="Firefox" /> Firefox
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Features</div>
+        <h2 class="section-title">Everything you need to <em>save your work</em></h2>
+      </div>
+      <div class="features-grid fade-in" style="grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 32px;">
+        <div class="feat" style="padding: 20px 22px;">
+          <span class="feat-icon" style="font-size:18px;">⚡</span>
+          <div class="feat-title">One-Click Export</div>
+          <p class="feat-desc" style="font-size:12px;">Toolbar button. Click once, PDF downloads instantly.</p>
+        </div>
+        <div class="feat" style="padding: 20px 22px;">
+          <span class="feat-icon" style="font-size:18px;">🎨</span>
+          <div class="feat-title">Clean Formatting</div>
+          <p class="feat-desc" style="font-size:12px;">Color-coded Q&A, tables, code blocks preserved.</p>
+        </div>
+        <div class="feat" style="padding: 20px 22px;">
+          <span class="feat-icon" style="font-size:18px;">📝</span>
+          <div class="feat-title">Chats & Notes</div>
+          <p class="feat-desc" style="font-size:12px;">Both chat history and notes fully supported.</p>
+        </div>
+        <div class="feat" style="padding: 20px 22px;">
+          <span class="feat-icon" style="font-size:18px;">🔒</span>
+          <div class="feat-title">100% Private</div>
+          <p class="feat-desc" style="font-size:12px;">Local only. Nothing leaves your browser.</p>
+        </div>
+        <div class="feat" style="padding: 20px 22px;">
+          <span class="feat-icon" style="font-size:18px;">🌐</span>
+          <div class="feat-title">All Major Browsers</div>
+          <p class="feat-desc" style="font-size:12px;">Chrome, Firefox & Edge supported.</p>
+        </div>
+        <div class="feat" style="padding: 20px 22px;">
+          <span class="feat-icon" style="font-size:18px;">💸</span>
+          <div class="feat-title">Free Forever</div>
+          <p class="feat-desc" style="font-size:12px;">No subscription, no limits, no catch.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USE CASES -->
+  <section class="section" id="use-cases">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Who uses it</div>
+        <h2 class="section-title">For anyone who <em>researches seriously</em></h2>
+        <p class="section-sub">Whether you're studying, writing a thesis, or building a knowledge base at work — keeping your NotebookLM work is now easy.</p>
+      </div>
+      <div class="usecases fade-in">
+        <div class="uc">
+          <div class="uc-icon-wrap">🎓</div>
+          <div>
+            <div class="uc-title">Students & Researchers</div>
+            <p class="uc-desc">Archive literature review sessions, save methodology discussions, and build a permanent record of your NotebookLM research as clean, shareable PDFs.</p>
+          </div>
+        </div>
+        <div class="uc">
+          <div class="uc-icon-wrap">✍️</div>
+          <div>
+            <div class="uc-title">Writers & Journalists</div>
+            <p class="uc-desc">Save brainstorming sessions, source breakdowns, and interview prep in PDF format. Re-import saved PDFs into new notebooks to build on past work.</p>
+          </div>
+        </div>
+        <div class="uc">
+          <div class="uc-icon-wrap">💼</div>
+          <div>
+            <div class="uc-title">Professionals & Teams</div>
+            <p class="uc-desc">Document project analysis sessions, create compliance records, and share research outputs with colleagues who aren't using NotebookLM.</p>
+          </div>
+        </div>
+        <div class="uc">
+          <div class="uc-icon-wrap">🧠</div>
+          <div>
+            <div class="uc-title">Knowledge Workers</div>
+            <p class="uc-desc">Build a permanent archive of AI-assisted research. Export once, re-import as a source in future notebooks to chain research sessions together.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Privacy</div>
+        <h2 class="section-title">Your research stays <em>yours.</em></h2>
+        <p class="section-sub">NotebookLM holds your most private research. This extension was built with that in mind.</p>
+      </div>
+      <div class="privacy-grid fade-in">
+        <div class="prv">
+          <div class="prv-title">Local Processing Only</div>
+          <p class="prv-desc">The PDF is generated entirely inside your browser using local rendering. No content is sent to any server, ever.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">No Data Collection</div>
+          <p class="prv-desc">The extension collects zero usage data, analytics, or personal information. It runs silently and does only what you ask it to do.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">No Account Required</div>
+          <p class="prv-desc">Install and use immediately. No email, no sign-up, no tracking. It works like a local tool — because it is one.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">FAQ</div>
+        <h2 class="section-title">Common <em>questions</em></h2>
+      </div>
+      <div class="faq-list fade-in">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            How do I export NotebookLM to PDF?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Install the extension from your browser's add-on store, open any NotebookLM notebook, and click the "Export to PDF" button in your browser toolbar. Your PDF downloads instantly.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Why can't I just use NotebookLM's built-in export?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">NotebookLM's native export only sends content to Google Docs or Sheets — there is no PDF option. There's also no way to export your full chat history at all. This extension fills exactly that gap.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Is my data safe? Does it upload anything?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Your data is completely safe. Everything is processed locally in your browser — no content, notes, or chat history ever leaves your device. There are no servers involved.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Can I export notes as well as chats?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes. Both chat conversations and notes are supported. The exported PDF preserves formatting, including tables, code blocks, math equations, and the visual distinction between questions and answers.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Does it work on Firefox and Edge?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes. The extension is available for Google Chrome, Microsoft Edge, and Firefox. Install it from whichever browser's add-on store you prefer.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Is it free?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes, completely free. No subscription, no premium version, no usage limits. It will stay free.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Can I re-import the exported PDF into NotebookLM?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes — this is one of the most useful workflows. Export a session as PDF, then upload it as a source in a new notebook. This lets you chain research sessions and build on past conversations.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="section">
+    <div class="wrap">
+      <div class="install-strip fade-in" style="text-align:center; display:block; padding: 56px 48px;">
+        <p style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:14px;">Get started now</p>
+        <h2 style="font-family:'Instrument Serif',serif; font-size:clamp(28px,4vw,44px); letter-spacing:-0.02em; margin-bottom:12px;">Stop losing your NotebookLM work.</h2>
+        <p style="font-size:15px; color:var(--muted); max-width:440px; margin: 0 auto 32px; line-height:1.7;">Install in 30 seconds. Export your first PDF in under a minute. Free, forever.</p>
+        <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+          <a href="https://chromewebstore.google.com/detail/notebooklm-pdf-exporter/lgmcbgicieigdnicfjemooocjokahmcb?authuser=1&hl=en" target="_blank" class="btn-install">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" /> Add to Chrome — Free
+          </a>
+          <a href="https://microsoftedge.microsoft.com/addons/detail/notebooklm-pdf-exporter/omlcfgmkkcncipknajloambgjfjnlhja" target="_blank" class="btn-ghost">
+            <img src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="" /> Edge
+          </a>
+          <a href="https://addons.mozilla.org/en-US/firefox/addon/notebooklm-to-pdf-exporter/" target="_blank" class="btn-ghost">
+            <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="" /> Firefox
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="wrap">
+    <footer>
+      <div class="footer-brand">
+        <img src="https://whale-store.pstatic.net/20260313_55/1773396258167RGlP1_PNG/iconSize.png" alt="" />
+        <span>NotebookLM PDF Exporter — by <a href="https://komzin.github.io" style="color:var(--accent); text-decoration:none;">komzin</a></span>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#faq">FAQ</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://komzin.github.io">More extensions</a>
+        <a href="/cdn-cgi/l/email-protection#56253a39212433203324341622232237783f39">Contact</a>
+      </div>
+    </footer>
+  </div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // FAQ accordion
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+        btn.setAttribute('aria-expanded', !isOpen);
+      });
+    });
+
+    // Scroll reveal
+    const els = document.querySelectorAll('.fade-in');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 80);
+      });
+    }, { threshold: 0.08 });
+    els.forEach(el => io.observe(el));
+  </script>
+</body>
+</html>
