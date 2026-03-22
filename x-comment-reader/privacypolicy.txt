@@ -1,0 +1,1 @@
+X Comments Reader does not collect, store, or transmit any of your personal data, login credentials, or browsing history to external servers. All processing, including the fetching of public post replies, occurs locally within your browser using your existing session on x.com, and no data is shared with the developer or any third parties.
