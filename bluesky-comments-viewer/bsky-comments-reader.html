@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bluesky Comments Reader — See replies without clicking</title>
+  <meta name="description" content="A free browser extension that shows Bluesky post replies in a sidebar panel the moment you hover over a post. No clicking required." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Bluesky Comments Reader — See replies without clicking" />
+  <meta property="og:description" content="Hover any Bluesky post and instantly see its replies in a sidebar. Free, private, no account needed." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fffdf7;
+      --surface: #f5f3ec;
+      --surface2: #eceae3;
+      --border: #dddbd3;
+      --text: #1a1916;
+      --muted: #6b6860;
+      --accent: #0085ff;
+      --accent-soft: rgba(0,133,255,0.10);
+      --nav-bg: rgba(255,253,247,0.88);
+      --radius: 12px;
+    }
+    html.dark {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: #222222;
+      --text: #e8e8e8;
+      --muted: #888888;
+      --accent: #0085ff;
+      --accent-soft: rgba(0,133,255,0.12);
+      --nav-bg: rgba(10,10,10,0.85);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 15px; }
+    .nav-brand-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    #theme-toggle {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); cursor: pointer;
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: border-color 0.2s;
+    }
+    #theme-toggle:hover { border-color: var(--accent); }
+    .nav-cta {
+      background: var(--accent); color: #fff; text-decoration: none;
+      padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ── Hero ── */
+    .hero { padding: 80px 0 56px; }
+    .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+    .hero-kicker {
+      display: inline-block;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent); background: var(--accent-soft);
+      padding: 5px 12px; border-radius: 20px; margin-bottom: 18px;
+    }
+    .hero-title {
+      font-size: clamp(30px, 4vw, 50px);
+      font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px;
+    }
+    .hero-title em { font-style: italic; color: var(--accent); }
+    .hero-sub { font-size: 16px; color: var(--muted); line-height: 1.7; margin-bottom: 32px; max-width: 460px; }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .hero-trust { font-size: 12px; color: var(--muted); }
+
+    .btn-install, .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      text-decoration: none; font-size: 14px; font-weight: 600;
+      padding: 11px 22px; border-radius: 9px; transition: all 0.2s;
+    }
+    .btn-install { background: var(--accent); color: #fff; }
+    .btn-install:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Mock UI ── */
+    .hero-visual {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    }
+    .visual-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 14px; background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .vb-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); }
+    .vb-url { font-size: 11px; color: var(--muted); margin-left: 6px; }
+    .mock-ui { display: flex; height: 260px; }
+    .mock-feed { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; border-right: 1px solid var(--border); }
+    .mock-post {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; font-size: 11px; color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .mock-post.hovered { border-color: var(--accent); background: var(--accent-soft); }
+    .mock-post-author { font-weight: 700; font-size: 10px; color: var(--accent); margin-bottom: 4px; }
+    .mock-post-text { color: var(--muted); line-height: 1.4; }
+    .mock-hover-label {
+      font-size: 9px; color: var(--accent); font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; margin-top: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .mock-sidebar { width: 180px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .mock-sidebar-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+    .mock-reply {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+      padding: 8px 10px; font-size: 10px;
+    }
+    .mock-reply-author { font-weight: 700; color: var(--accent); margin-bottom: 3px; font-size: 9px; }
+    .mock-reply-text { color: var(--muted); line-height: 1.4; }
+    .mock-reply-meta { font-size: 9px; color: var(--border); margin-top: 4px; }
+
+    /* ── Section ── */
+    .section { padding: 80px 0; border-top: 1px solid var(--border); }
+    .section-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .section-title { font-size: clamp(22px, 3vw, 36px); font-weight: 800; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 14px; }
+    .section-title em { font-style: italic; color: var(--accent); }
+    .section-sub { font-size: 15px; color: var(--muted); max-width: 520px; line-height: 1.7; }
+
+    /* ── Steps ── */
+    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 22px; }
+    .step-num {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent-soft); color: var(--accent);
+      font-weight: 800; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+    }
+    .step-title { font-weight: 700; font-size: 15px; margin-bottom: 7px; }
+    .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── Features ── */
+    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 32px; }
+    .feat { background: var(--surface); padding: 22px; border: 1px solid var(--border); border-radius: 4px; }
+    .feat-icon { font-size: 20px; display: block; margin-bottom: 10px; }
+    .feat-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+    .feat-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* ── Privacy ── */
+    .privacy-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .prv { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; }
+    .prv-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+    .prv-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ── FAQ ── */
+    .faq-list { margin-top: 40px; display: flex; flex-direction: column; gap: 4px; }
+    .faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .faq-q {
+      width: 100%; background: none; border: none; color: var(--text);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 22px; font-size: 15px; font-weight: 600;
+      cursor: pointer; text-align: left; gap: 16px;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-chevron { font-size: 13px; color: var(--muted); transition: transform 0.25s; flex-shrink: 0; }
+    .faq-a {
+      max-height: 0; overflow: hidden;
+      font-size: 14px; color: var(--muted); line-height: 1.7;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 22px;
+    }
+    .faq-item.open .faq-a { max-height: 200px; padding: 0 22px 18px; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+    /* ── CTA strip ── */
+    .cta-strip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 48px;
+      text-align: center; margin-top: 0;
+    }
+    .cta-strip h2 { font-size: clamp(22px, 3vw, 34px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .cta-strip p { font-size: 15px; color: var(--muted); max-width: 400px; margin: 0 auto 28px; line-height: 1.7; }
+    .cta-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+    /* ── Footer ── */
+    footer {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      padding: 28px 0; border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--muted);
+    }
+    .footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text); }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .footer-links a { color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── Fade-in ── */
+    .fade-in { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 36px; }
+      .steps { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: repeat(2,1fr); }
+      .privacy-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-brand">
+      <div class="nav-brand-icon">🦋</div>
+      <span>Bluesky Comments Reader</span>
+    </a>
+    <div class="nav-right">
+      <button id="theme-toggle" aria-label="Toggle theme">🌙</button>
+      <a href="https://chromewebstore.google.com" target="_blank" class="nav-cta">Add to Chrome — Free</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-kicker">Free Browser Extension</div>
+          <h1 class="hero-title">Bluesky replies,<br><em>just hover.</em></h1>
+          <p class="hero-sub">Stop clicking into every post to read comments. This extension shows Bluesky replies in a sidebar the moment you hover — no navigation, no page reload.</p>
+          <div class="hero-actions">
+            <a href="https://chromewebstore.google.com" target="_blank" class="btn-install">
+              <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" style="width:16px;height:16px;border-radius:3px;" />
+              Add to Chrome — Free
+            </a>
+            <a href="https://addons.mozilla.org" target="_blank" class="btn-ghost">
+              <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="" style="width:16px;height:16px;border-radius:3px;" />
+              Firefox
+            </a>
+          </div>
+          <div class="hero-trust">Free forever &nbsp;·&nbsp; No account &nbsp;·&nbsp; 100% local</div>
+        </div>
+
+        <!-- Mock UI -->
+        <div class="hero-visual" aria-hidden="true">
+          <div class="visual-bar">
+            <div class="vb-dot"></div><div class="vb-dot"></div><div class="vb-dot"></div>
+            <div class="vb-url">bsky.app</div>
+          </div>
+          <div class="mock-ui">
+            <div class="mock-feed">
+              <div class="mock-post">
+                <div class="mock-post-author">@alice.bsky.social</div>
+                <div class="mock-post-text">Just shipped a big refactor. Feels good when the diff is mostly deletions 🎉</div>
+              </div>
+              <div class="mock-post hovered">
+                <div class="mock-post-author">@bob.bsky.social</div>
+                <div class="mock-post-text">Hot take: Bluesky's AT protocol is going to change how we think about social identity.</div>
+                <div class="mock-hover-label">👆 hovering</div>
+              </div>
+              <div class="mock-post">
+                <div class="mock-post-author">@carol.bsky.social</div>
+                <div class="mock-post-text">Morning coffee and open tabs. Classic dev combo.</div>
+              </div>
+            </div>
+            <div class="mock-sidebar">
+              <div class="mock-sidebar-title">💬 3 replies</div>
+              <div class="mock-reply">
+                <div class="mock-reply-author">@dev.bsky.social</div>
+                <div class="mock-reply-text">Totally agree, federated identity is underrated.</div>
+                <div class="mock-reply-meta">❤️ 12 · 💬 2</div>
+              </div>
+              <div class="mock-reply">
+                <div class="mock-reply-author">@alice.bsky.social</div>
+                <div class="mock-reply-text">The DIDs are a nice touch tbh</div>
+                <div class="mock-reply-meta">❤️ 5 · 💬 0</div>
+              </div>
+              <div class="mock-reply">
+                <div class="mock-reply-author">@ux.bsky.social</div>
+                <div class="mock-reply-text">Still skeptical but curious 👀</div>
+                <div class="mock-reply-meta">❤️ 3 · 💬 1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">How it works</div>
+        <h2 class="section-title">Three steps to <em>frictionless reading</em></h2>
+        <p class="section-sub">From install to your first sidebar reply in under a minute.</p>
+      </div>
+      <div class="steps fade-in">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">Install the extension</div>
+          <p class="step-desc">Add it from Chrome Web Store or Firefox Add-ons. No account, no permissions beyond bsky.app.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">Browse Bluesky normally</div>
+          <p class="step-desc">Go to bsky.app and scroll your feed as usual. The extension runs silently in the background.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Hover any post</div>
+          <p class="step-desc">A sidebar slides in with all replies, threaded and live — no click, no navigation, no lost scroll position.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Features</div>
+        <h2 class="section-title">Everything you need to <em>read faster</em></h2>
+      </div>
+      <div class="features-grid fade-in">
+        <div class="feat">
+          <span class="feat-icon">🖱️</span>
+          <div class="feat-title">Hover to Preview</div>
+          <p class="feat-desc">Replies appear on hover with a 400ms delay — fast enough to feel instant, slow enough to avoid noise.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🧵</span>
+          <div class="feat-title">Threaded Replies</div>
+          <p class="feat-desc">Full reply tree with nested sub-threads. Expand any reply to see its own replies inline.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">⚡</span>
+          <div class="feat-title">Smart Caching</div>
+          <p class="feat-desc">Replies are fetched once and cached. Re-hover the same post and it loads instantly.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🔒</span>
+          <div class="feat-title">100% Private</div>
+          <p class="feat-desc">Calls the public Bluesky API directly. Nothing is sent to any third-party server.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">❤️</span>
+          <div class="feat-title">Like Counts</div>
+          <p class="feat-desc">See like and reply counts on each reply at a glance without opening the post.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">💸</span>
+          <div class="feat-title">Free Forever</div>
+          <p class="feat-desc">No subscription, no premium tier, no usage cap. Open and free.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Privacy</div>
+        <h2 class="section-title">Your browsing stays <em>yours.</em></h2>
+        <p class="section-sub">The extension only runs on bsky.app and only talks to Bluesky's own public API.</p>
+      </div>
+      <div class="privacy-grid fade-in">
+        <div class="prv">
+          <div class="prv-title">No Third-Party Servers</div>
+          <p class="prv-desc">Replies are fetched directly from public.api.bsky.app — the same API Bluesky uses. Nothing passes through any intermediate server.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">No Data Collection</div>
+          <p class="prv-desc">The extension collects zero usage data, analytics, or personal information. It has no backend whatsoever.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">Minimal Permissions</div>
+          <p class="prv-desc">Only requests access to bsky.app. It cannot read other tabs, your history, or any other websites.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">FAQ</div>
+        <h2 class="section-title">Common <em>questions</em></h2>
+      </div>
+      <div class="faq-list fade-in">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Does this work on the Bluesky mobile app?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">No — it's a browser extension, so it only works on the web version at bsky.app. Mobile apps don't support browser extensions.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Do I need a Bluesky account to use it?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">No. The extension uses Bluesky's public API which doesn't require authentication. Install and hover — that's it.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Will it slow down my Bluesky feed?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">No. API calls only happen after you hover for 400ms, and results are cached so each post is only fetched once per session.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            How deep are the threaded replies?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">The extension fetches up to 5 levels deep on first hover. Sub-replies can be expanded to load an additional 3 levels. This covers the vast majority of Bluesky conversations.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">
+            Is it open source?
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-a">Yes. The full source is available on GitHub. You can inspect exactly what the extension does before installing.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="section">
+    <div class="wrap">
+      <div class="cta-strip fade-in">
+        <p style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">Get started now</p>
+        <h2>Stop clicking into every post.</h2>
+        <p>Install in 30 seconds. Works immediately on bsky.app. Free, forever.</p>
+        <div class="cta-actions">
+          <a href="https://chromewebstore.google.com" target="_blank" class="btn-install">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" style="width:16px;height:16px;border-radius:3px;" />
+            Add to Chrome — Free
+          </a>
+          <a href="https://addons.mozilla.org" target="_blank" class="btn-ghost">
+            <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="" style="width:16px;height:16px;border-radius:3px;" />
+            Firefox
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="wrap">
+    <footer>
+      <div class="footer-brand">
+        🦋 Bluesky Comments Reader — by <a href="https://komzin.github.io" style="color:var(--accent);text-decoration:none;margin-left:4px;">komzin</a>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#faq">FAQ</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://komzin.github.io">More extensions</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Theme toggle
+    const toggle = document.getElementById('theme-toggle');
+    toggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      toggle.textContent = isDark ? '☀️' : '🌙';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+      toggle.textContent = '☀️';
+    }
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+        btn.setAttribute('aria-expanded', !isOpen);
+      });
+    });
+
+    // Scroll reveal
+    const els = document.querySelectorAll('.fade-in');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 80);
+      });
+    }, { threshold: 0.08 });
+    els.forEach(el => io.observe(el));
+  </script>
+</body>
+</html>
