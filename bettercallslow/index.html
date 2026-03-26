@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>BetterCallSlow — Slow, Reverb & Bass Boost for YouTube & Spotify</title>
-  <meta name="description" content="Free browser extension that adds slow + reverb + bass boost to YouTube, Spotify and SoundCloud in real-time." />
+  <title>BetterCallSlow — Slow, Reverb & Bass Boost</title>
+  <meta name="description" content="Free browser extension that adds slow + reverb + bass boost in real-time." />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -119,10 +119,33 @@
     .bb-dot:nth-child(2) { background: #febc2e; }
     .bb-dot:nth-child(3) { background: #28c840; }
     .bb-url { flex: 1; background: #000; border-radius: 4px; padding: 6px 12px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #666; margin-left: 12px; text-align: center;}
+    
     .browser-content { flex: 1; position: relative; background: #000; }
     
-    /* The iframe - FIX FOR ERROR 153 APPLIED HERE */
-    .browser-content iframe { width: 50%; height: 50%; border: none; }
+    /* FAKE YOUTUBE PLAYER */
+    .fake-yt-player {
+      width: 100%; height: 100%; 
+      background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=1000&auto=format&fit=crop');
+      background-size: cover; background-position: center;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; cursor: pointer;
+    }
+    .fake-yt-overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.3s;
+    }
+    .fake-yt-player:hover .fake-yt-overlay { background: rgba(0,0,0,0.3); }
+    .play-btn-circle {
+      width: 68px; height: 68px; background: rgba(255,0,0,0.9); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 28px; padding-left: 6px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: transform 0.2s;
+    }
+    .fake-yt-player:hover .play-btn-circle { transform: scale(1.1); background: red; }
+    .track-info { position: absolute; top: 20px; left: 20px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+    .track-info h3 { font-size: 18px; margin-bottom: 4px; }
+    .track-info p { font-size: 13px; color: rgba(255,255,255,0.8); }
 
     /* The Extension Popup Hovering */
     .ext-popup {
@@ -130,7 +153,7 @@
       width: 280px; background: var(--popup-bg); border-radius: 8px;
       border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       color: var(--popup-text); display: flex; flex-direction: column;
-      z-index: 10; font-family: 'Geist', sans-serif;
+      z-index: 10; font-family: 'Geist', sans-serif; cursor: default;
     }
     .ext-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -146,7 +169,7 @@
     .control { display: flex; flex-direction: column; align-items: center; flex: 1; }
     .slider {
       width: 32px; height: 120px; padding: 0 12px; cursor: ns-resize;
-      display: flex; justify-content: center; position: relative;
+      display: flex; justify-content: center; position: relative; touch-action: none;
     }
     .slider__track {
       width: 6px; height: 100%; background: #333; border-radius: 4px;
@@ -154,12 +177,12 @@
     }
     .slider__fill {
       position: absolute; bottom: 0; left: 0; width: 100%;
-      background: var(--accent); border-radius: 4px; transition: height 0.1s linear;
+      background: var(--accent); border-radius: 4px; transition: height 0.05s linear;
     }
     .slider__handle {
       position: absolute; left: 50%; transform: translate(-50%, 50%);
       width: 16px; height: 16px; background: #fff; border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5); transition: bottom 0.1s linear;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5); transition: bottom 0.05s linear;
     }
     .control__footer { text-align: center; margin-top: 12px; }
     .control__label { display: block; font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--popup-muted); text-transform: uppercase; margin-bottom: 4px; }
@@ -181,7 +204,6 @@
       background: #FF813F; color: #fff; text-decoration: none;
       padding: 8px; border-radius: 4px; font-size: 12px; font-weight: 500;
     }
-    .bmc-emoji { font-size: 14px; }
 
     /* PROBLEM BANNER */
     .problem-bar {
@@ -258,7 +280,7 @@
         <div>
           <div class="hero-kicker">Free Browser Extension</div>
           <h1 class="hero-title">Shape your sound,<br><em>right in the browser.</em></h1>
-          <p class="hero-sub">Turn any song on YouTube, Spotify, or SoundCloud into a slowed + reverb masterpiece instantly. Try the interactive demo slider mockup on the right!</p>
+          <p class="hero-sub">Turn any song on YouTube, Spotify, or SoundCloud into a slowed + reverb masterpiece instantly. Try the interactive audio demo on the right!</p>
           <div class="hero-actions">
             <a href="#" target="_blank" class="btn-install">
               <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" />
@@ -271,21 +293,21 @@
         <div class="hero-browser">
           <div class="browser-bar">
             <div class="bb-dot"></div><div class="bb-dot"></div><div class="bb-dot"></div>
-            <div class="bb-url">youtube.com/watch?v=RqIRp4QE-1k</div>
+            <div class="bb-url">youtube.com/watch?v=BetterCallSlowDemo</div>
           </div>
           <div class="browser-content">
-            <iframe 
-  width="100%" 
-  height="100%" 
-  src="https://www.youtube-nocookie.com/embed/RqIRp4QE-1k?list=RDRqIRp4QE-1k" 
-  title="OutKast - Hey Ya! (Lyrics)" 
-  frameborder="0" 
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-  referrerpolicy="strict-origin-when-cross-origin" 
-  allowfullscreen>
-</iframe>
             
-            <div class="ext-popup">
+            <div class="fake-yt-player" id="fakePlayer">
+              <div class="track-info">
+                <h3>Lofi Chill Beat</h3>
+                <p>BetterCallSlow Interactive Demo</p>
+              </div>
+              <div class="fake-yt-overlay">
+                <div class="play-btn-circle" id="playIcon">▶</div>
+              </div>
+            </div>
+            
+            <div class="ext-popup" id="extPopup">
               <header class="ext-header">
                 <span class="ext-brand">BetterCallSlow</span>
                 <button class="ext-orient" title="Switch orientation">⇅</button>
@@ -318,7 +340,7 @@
                     </div>
                   </div>
                   <div class="control">
-                    <div class="slider" id="demo-bass" data-min="0" data-max="100" data-val="0">
+                    <div class="slider" id="demo-bass" data-min="0" data-max="10" data-val="0">
                       <div class="slider__track">
                         <div class="slider__fill" style="height: 0%"></div>
                         <div class="slider__handle" style="bottom: 0%"></div>
@@ -333,7 +355,7 @@
 
                 <div class="ext-presets">
                   <button class="ext-preset active" onclick="applyMockupPreset(1.0, 0, 0, this)">Reset</button>
-                  <button class="ext-preset" onclick="applyMockupPreset(0.8, 40, 0, this)">Slowed</button>
+                  <button class="ext-preset" onclick="applyMockupPreset(0.8, 40, 20, this)">Slowed</button>
                   <button class="ext-preset" onclick="applyMockupPreset(1.2, 0, 0, this)">Nightcore</button>
                 </div>
 
@@ -341,10 +363,6 @@
                   <span class="bmc-emoji">☕</span>
                   <span class="bmc-text">can we drink together ❔</span>
                 </a>
-                
-                <p style="font-size: 9px; color: #666; text-align: center; margin-top: 10px; line-height: 1.2;">
-                  *Interactive visual demo. Install extension to alter real audio.
-                </p>
 
               </div>
             </div>
@@ -407,7 +425,137 @@
   </div>
 
   <script>
-    // Visual Mockup Logic for Sliders (Does not affect YouTube iframe)
+    // --- AUDIO ENGINE ---
+    let audioCtx = null, sourceNode = null, audioBuffer = null;
+    let gainNode, bassFilter, convolverNode, dryGain, wetGain;
+    let isPlaying = false, startTime = 0, pauseOffset = 0;
+    
+    // Default States
+    let state = { speed: 1.0, reverb: 0, bass: 0 };
+
+    function initAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      gainNode = audioCtx.createGain();
+      
+      bassFilter = audioCtx.createBiquadFilter();
+      bassFilter.type = 'lowshelf';
+      bassFilter.frequency.value = 150;
+      bassFilter.gain.value = 0;
+
+      convolverNode = audioCtx.createConvolver();
+      convolverNode.buffer = createImpulse(audioCtx, 2.5, 2.5);
+      
+      dryGain = audioCtx.createGain();
+      wetGain = audioCtx.createGain();
+      dryGain.gain.value = 1;
+      wetGain.gain.value = 0;
+
+      // Routing: Source -> Bass -> [Dry, Reverb->Wet] -> Gain -> Dest
+      bassFilter.connect(dryGain);
+      bassFilter.connect(convolverNode);
+      dryGain.connect(gainNode);
+      convolverNode.connect(wetGain);
+      wetGain.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+    }
+
+    function createImpulse(ctx, duration, decay) {
+      const len = Math.ceil(ctx.sampleRate * duration);
+      const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let c = 0; c < 2; c++) {
+        const d = buf.getChannelData(c);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+      return buf;
+    }
+
+    async function togglePlay() {
+      const icon = document.getElementById('playIcon');
+
+      if (!audioBuffer) {
+        initAudio();
+        icon.textContent = "⏳";
+        icon.style.fontSize = "24px";
+        icon.style.paddingLeft = "0";
+        try {
+          const res = await fetch('demo.mp3'); 
+          if (!res.ok) throw new Error("File not found");
+          const arrayBuffer = await res.arrayBuffer();
+          audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        } catch(e) {
+          alert("Make sure you place a file named 'demo.mp3' in the same folder!");
+          icon.textContent = "▶";
+          icon.style.fontSize = "28px";
+          icon.style.paddingLeft = "6px";
+          return;
+        }
+      }
+
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+      if (isPlaying) {
+        pauseOffset = (audioCtx.currentTime - startTime) * state.speed;
+        if(sourceNode) {
+            try { sourceNode.stop(); } catch(e){}
+        }
+        isPlaying = false;
+        icon.textContent = "▶";
+        icon.style.fontSize = "28px";
+        icon.style.paddingLeft = "6px";
+      } else {
+        sourceNode = audioCtx.createBufferSource();
+        sourceNode.buffer = audioBuffer;
+        sourceNode.playbackRate.value = state.speed;
+        sourceNode.connect(bassFilter);
+        
+        if (pauseOffset >= audioBuffer.duration) pauseOffset = 0;
+        sourceNode.start(0, pauseOffset);
+        startTime = audioCtx.currentTime - pauseOffset / state.speed;
+        
+        sourceNode.onended = () => { 
+            if(isPlaying){ 
+                isPlaying = false; 
+                icon.textContent = "▶"; 
+                icon.style.fontSize = "28px";
+                icon.style.paddingLeft = "6px";
+                pauseOffset = 0; 
+            }
+        };
+        isPlaying = true;
+        icon.textContent = "⏸";
+        icon.style.fontSize = "24px";
+        icon.style.paddingLeft = "0";
+      }
+    }
+
+    // Bind Player Click
+    document.getElementById('fakePlayer').addEventListener('click', (e) => {
+        // Prevent click if clicking the extension UI
+        if(e.target.closest('#extPopup')) return;
+        togglePlay();
+    });
+
+    // Stop propagation on popup so clicking sliders doesn't pause video
+    document.getElementById('extPopup').addEventListener('click', e => e.stopPropagation());
+
+    // --- UI & AUDIO UPDATE LOGIC ---
+    function updateAudioEffects() {
+        if(sourceNode) {
+            sourceNode.playbackRate.value = state.speed;
+            // Adjust start time so pause offset stays accurate if speed changes mid-playback
+            if(isPlaying) startTime = audioCtx.currentTime - ((audioCtx.currentTime - startTime) * sourceNode.playbackRate.value) / state.speed;
+        }
+        if(wetGain) {
+            wetGain.gain.value = state.reverb / 100;
+            dryGain.gain.value = 1 - (state.reverb / 100 * 0.5);
+        }
+        if(bassFilter) {
+            bassFilter.gain.value = state.bass; // bass is 0 to 10 db
+        }
+    }
+
     function setVisualFader(id, pct, displayVal) {
       const slider = document.getElementById(`demo-${id}`);
       slider.querySelector('.slider__fill').style.height = `${pct * 100}%`;
@@ -419,12 +567,19 @@
       document.querySelectorAll('.ext-preset').forEach(b => b.classList.remove('active'));
       btnEl.classList.add('active');
 
+      state.speed = speed;
+      state.reverb = reverb;
+      state.bass = bass;
+
       const speedPct = (speed - 0.5) / 1.0; 
       setVisualFader('speed', speedPct, `${speed.toFixed(2)}x`);
       setVisualFader('reverb', reverb / 100, `${reverb}%`);
-      setVisualFader('bass', bass / 100, `${bass}%`);
+      setVisualFader('bass', bass / 10, `${(bass * 10)}%`); // max 10db = 100%
+
+      updateAudioEffects();
     }
 
+    // Draggable Sliders
     ['speed', 'reverb', 'bass'].forEach(id => {
       const slider = document.getElementById(`demo-${id}`);
       let isDragging = false;
@@ -434,12 +589,22 @@
         const pct = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
         
         let displayVal = '';
-        if(id === 'speed') displayVal = `${(0.5 + pct * 1.0).toFixed(2)}x`;
-        if(id === 'reverb') displayVal = `${Math.round(pct * 100)}%`;
-        if(id === 'bass') displayVal = `${Math.round(pct * 100)}%`;
+        if(id === 'speed') {
+            state.speed = 0.5 + pct * 1.0;
+            displayVal = `${state.speed.toFixed(2)}x`;
+        }
+        if(id === 'reverb') {
+            state.reverb = pct * 100;
+            displayVal = `${Math.round(state.reverb)}%`;
+        }
+        if(id === 'bass') {
+            state.bass = pct * 10; // max 10db
+            displayVal = `${Math.round(pct * 100)}%`;
+        }
         
         setVisualFader(id, pct, displayVal);
         document.querySelectorAll('.ext-preset').forEach(b => b.classList.remove('active'));
+        updateAudioEffects();
       };
 
       slider.addEventListener('pointerdown', e => { isDragging = true; slider.setPointerCapture(e.pointerId); updateFader(e); });
