@@ -15,7 +15,6 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* Based exactly on index (1).html design */
       --bg:       #f7f4ee;
       --surface:  #efebe2;
       --surface2: #e5e0d5;
@@ -125,7 +124,16 @@
     /* Top: Miniplayer */
     .hw-player { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .hw-info { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .hw-thumb { width: 44px; height: 44px; border-radius: 6px; background: var(--demo-accent); display: flex; align-items: center; justify-content: center; font-size: 20px; transition: background 0.3s ease; }
+    
+    .hw-thumb { 
+      width: 44px; height: 44px; border-radius: 6px; 
+      background: var(--demo-accent); 
+      display: flex; align-items: center; justify-content: center; 
+      font-size: 20px; transition: all 0.3s ease; 
+      box-shadow: 0 0 15px var(--demo-accent); 
+    }
+    .hw-thumb img { width: 20px; height: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+    
     .hw-text { flex: 1; }
     .hw-title { font-size: 14px; font-weight: 500; color: #fff; line-height: 1.2; }
     .hw-sub { font-size: 10px; color: rgba(255,255,255,0.4); font-family: 'Geist Mono', monospace; margin-top: 4px; }
@@ -186,6 +194,12 @@
     .feat-icon { font-size: 18px; margin-bottom: 12px; display: block; }
     .feat-title { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 6px; }
     .feat-desc { font-size: 12px; color: var(--muted); line-height: 1.65; }
+    
+    /* ── SEO TUTORIAL CARDS ── */
+    .seo-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .seo-card { background: var(--surface); padding: 32px; border-radius: 8px; border: 1px solid var(--border); }
+    .seo-card h3 { font-family: 'Instrument Serif', serif; font-size: 24px; margin-bottom: 12px; color: var(--text); }
+    .seo-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
     /* ── PRIVACY ── */
     .privacy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
@@ -218,13 +232,14 @@
       .wrap { padding: 0 20px; }
       .hero-inner { grid-template-columns: 1fr; }
       .hero-demo-widget { margin: 0 auto; }
-      .features-grid, .steps, .privacy-grid { grid-template-columns: 1fr; }
+      .features-grid, .steps, .privacy-grid, .seo-cards { grid-template-columns: 1fr; }
       .steps::before { display: none; }
       .install-strip { flex-direction: column; padding: 28px 24px; }
       .install-browsers { flex-wrap: wrap; justify-content: center;}
       nav { padding: 12px 20px; }
     }
   </style>
+  <meta name="google-site-verification" content="Vah3jRHjSLwBq2Tf1b84hNEF-T_tASnOJYihFCV7X2I" />
 </head>
 <body>
 
@@ -243,8 +258,8 @@
       <div class="hero-inner">
         <div>
           <div class="hero-kicker">Free Browser Extension</div>
-          <h1 class="hero-title">Shape your sound,<br><em>while you listen.</em></h1>
-          <p class="hero-sub">Turn any song into a slowed + reverb masterpiece in real-time. Try the live interactive player on the right to hear it instantly.</p>
+          <h1 class="hero-title">Slow, reverb & bass boost<br><em>while you listen.</em></h1>
+          <p class="hero-sub">Turn any song on YouTube, Spotify or SoundCloud into a slowed + reverb version in real-time. No downloads, no re-uploads — just drag the slider and feel it.</p>
           
           <div class="platform-pills">
             <button class="ppill yt active" onclick="setDemoTheme('yt')">
@@ -271,7 +286,9 @@
           
           <div class="hw-player">
             <div class="hw-info">
-              <div class="hw-thumb">🎵</div>
+              <div class="hw-thumb" id="demoThumbIcon">
+                <img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt=""/>
+              </div>
               <div class="hw-text">
                 <div class="hw-title">Lofi Chill Beat</div>
                 <div class="hw-sub">Live Interactive Demo</div>
@@ -371,16 +388,23 @@
           <p class="step-desc">Move the sliders in real-time. Changes apply instantly without page reloads.</p>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="install-strip fade-in">
-        <div>
-          <h3>Ready to slow it down?</h3>
-          <p>Free, takes 5 seconds to install, works immediately.</p>
+  <section class="section" id="how-to-slow-reverb">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Tutorial</div>
+        <h2 class="section-title">How to make any song <em>slowed and reverb</em></h2>
+      </div>
+      <div class="seo-cards fade-in" style="margin-top: 32px;">
+        <div class="seo-card">
+          <h3 style="display:flex; align-items:center; gap:8px;">❌ The Old Way</h3>
+          <p>Historically, making a slowed and reverb track required downloading the MP3, opening expensive audio software like FL Studio or Audacity, manually stretching the tempo, adding a reverb plugin, and exporting the file. It took 15 minutes just to hear a single song differently.</p>
         </div>
-        <div class="install-browsers">
-          <a href="https://chromewebstore.google.com/detail/bettercallslowslow-reverb/pidmlbkdglggfnpiaahbdnpmhaglcmij" target="_blank" class="ib">
-            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="Chrome" /> Chrome
-          </a>
+        <div class="seo-card" style="border-top: 3px solid var(--accent);">
+          <h3 style="display:flex; align-items:center; gap:8px;">✅ The BetterCallSlow Way</h3>
+          <p>Now, you can make any song slow and reverb directly in your browser. Just install the BetterCallSlow extension, play any track on YouTube, Spotify, or SoundCloud, and drag the speed and reverb sliders. The audio is processed in real-time, completely free, with no downloads required.</p>
         </div>
       </div>
     </div>
@@ -473,6 +497,7 @@
       </div>
       <div class="footer-links">
         <a href="#how-it-works">How it works</a>
+        <a href="#how-to-slow-reverb">Tutorial</a>
         <a href="#features">Features</a>
         <a href="#privacy">Privacy</a>
         <a href="https://komzin.github.io">More extensions</a>
@@ -481,14 +506,24 @@
   </div>
 
   <script>
-  // ── PLATFORM COLOR THEME ─────────────────────────────────────────
+  // ── PLATFORM COLOR THEME & ICONS ─────────────────────────────────
   const PLATFORM_COLORS = { yt: '#ff0000', sp: '#1db954', sc: '#ff5500' };
+  const PLATFORM_ICONS = { 
+    yt: '<img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt=""/>', 
+    sp: '<img src="https://www.google.com/s2/favicons?domain=spotify.com&sz=32" alt=""/>', 
+    sc: '<img src="https://www.google.com/s2/favicons?domain=soundcloud.com&sz=32" alt=""/>' 
+  };
 
   function setDemoTheme(p) {
     const col = PLATFORM_COLORS[p];
     document.documentElement.style.setProperty('--demo-accent', col);
+    
+    // Update pill styles
     document.querySelectorAll('.ppill').forEach(btn => btn.classList.remove('active'));
     document.querySelector('.ppill.' + p).classList.add('active');
+    
+    // Update thumbnail icon
+    document.getElementById('demoThumbIcon').innerHTML = PLATFORM_ICONS[p];
   }
   setDemoTheme('yt'); // initial theme
 
