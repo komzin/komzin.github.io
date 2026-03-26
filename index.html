@@ -1,531 +1,410 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>X Comments Reader — Firefox Extension</title>
+  <title>komzin — Browser Extensions</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg:      #f0ece3;
-      --bg2:     #e8e3d9;
-      --surface: #faf8f4;
-      --border:  #d6d0c4;
-      --text:    #1a1612;
-      --muted:   #7a7268;
-      --accent:  #48b4cf;
-      --pink:    #f91880;
-      --radius:  14px;
+    :root, [data-theme="dark"] {
+      --bg:       #0c0c0e;
+      --bg-nav:   rgba(12,12,14,0.78);
+      --surface:  #141417;
+      --surface2: #1e1e23;
+      --border:   rgba(255,255,255,0.08);
+      --text:     #f0ede8;
+      --muted:    #7a7880;
+      --accent:   #c8f065;
+      --accent2:  #65c8f0;
+      --accent3:  #f065c8;
+      --glow:     rgba(200,240,101,0.18);
+    }
+    [data-theme="light"] {
+      --bg:       #fffdf7;
+      --bg-nav:   rgba(255,253,247,0.88);
+      --surface:  #f2efe8;
+      --surface2: #e8e4db;
+      --border:   rgba(0,0,0,0.09);
+      --text:     #18160f;
+      --muted:    #7a7260;
+      --accent:   #5a8a00;
+      --accent2:  #006fa8;
+      --accent3:  #a8006f;
+      --glow:     rgba(90,138,0,0.12);
     }
 
     html { scroll-behavior: smooth; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.6;
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; line-height: 1.6; overflow-x: hidden; transition: background 0.35s, color 0.35s; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999;
     }
+
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 36px; position: relative; z-index: 1; }
 
     /* NAV */
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 48px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .nav-logo {
-      font-family: 'Instrument Serif', serif;
-      font-size: 19px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .nav-sub { color: var(--muted); font-size: 15px; margin-left: 2px; }
-    .nav-badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      background: var(--accent);
-      color: #fff;
-      padding: 2px 8px;
-      border-radius: 99px;
-    }
-    .nav-links { display: flex; gap: 24px; align-items: center; }
-    .nav-links a {
-      font-size: 14px; color: var(--muted);
-      text-decoration: none; transition: color 0.15s;
-    }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 14px 36px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); background: var(--bg-nav); transition: background 0.35s, border-color 0.35s; }
+    .nav-left { display: flex; align-items: center; gap: 32px; }
+    .nav-logo { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); letter-spacing: 0.06em; text-decoration: none; transition: color 0.35s; }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { font-size: 12px; color: var(--muted); text-decoration: none; letter-spacing: 0.04em; transition: color 0.2s; }
     .nav-links a:hover { color: var(--text); }
+    .theme-btn-wrap { display: flex; align-items: center; gap: 8px; }
+    .theme-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.35s; user-select: none; }
+    .theme-btn { width: 34px; height: 20px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; position: relative; transition: background 0.3s, border-color 0.35s; flex-shrink: 0; }
+    .theme-btn::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); transition: transform 0.3s, background 0.35s; }
+    [data-theme="light"] .theme-btn::after { transform: translateX(14px); }
 
-    /* HERO — split */
-    .hero-section {
-      display: grid;
-      grid-template-columns: 1fr 1.1fr;
-      gap: 52px;
-      align-items: center;
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 68px 48px 76px;
-    }
+    /* HERO */
+    .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; padding-top: 56px; }
     .hero-left { display: flex; flex-direction: column; }
-    .hero-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1.8px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 18px;
-    }
-    .hero-left h1 {
-      font-family: 'Instrument Serif', serif;
-      font-size: clamp(34px, 4vw, 56px);
-      line-height: 1.08;
-      letter-spacing: -0.5px;
-      margin-bottom: 20px;
-    }
-    .hero-left h1 em { font-style: italic; color: var(--accent); }
-    .hero-left > p {
-      font-size: 16px;
-      color: var(--muted);
-      margin-bottom: 36px;
-      max-width: 380px;
-      line-height: 1.65;
-    }
+    .hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; opacity: 0; animation: fadeUp 0.8s 0.15s ease forwards; transition: color 0.35s; }
+    .hero-eyebrow::before { content: ''; display: block; width: 26px; height: 1px; background: var(--accent); transition: background 0.35s; }
+    .hero-title { font-family: 'DM Serif Display', serif; font-size: clamp(36px, 4.8vw, 72px); line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 20px; opacity: 0; animation: fadeUp 0.8s 0.3s ease forwards; }
+    .hero-title em { font-style: italic; color: var(--accent); transition: color 0.35s; }
+    .hero-sub { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 36px; max-width: 380px; opacity: 0; animation: fadeUp 0.8s 0.45s ease forwards; transition: color 0.35s; }
+    .hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; opacity: 0; animation: fadeUp 0.8s 0.6s ease forwards; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #0c0c0e; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; padding: 12px 24px; border-radius: 2px; text-decoration: none; font-weight: 500; transition: all 0.25s; }
+    .btn-primary:hover { box-shadow: 0 0 28px var(--glow); filter: brightness(1.08); }
+    .btn-secondary { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid var(--border); padding-bottom: 2px; transition: color 0.2s, border-color 0.2s; }
+    .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
 
-    /* install buttons */
-    .install-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
+    /* CAROUSEL */
+    .hero-right { opacity: 0; animation: fadeIn 0.9s 0.5s ease forwards; display: flex; flex-direction: column; justify-content: center; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+    .hero-carousel-outer {
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, black 14%, black 86%, transparent 100%);
     }
-    .browser-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-browser {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 20px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      text-decoration: none;
-      border: 1.5px solid var(--border);
+    .hero-carousel-track { display: flex; gap: 12px; transition: transform 0.75s cubic-bezier(0.4,0,0.2,1); will-change: transform; }
+
+    .hcard {
+      flex: 0 0 252px;
       background: var(--surface);
-      color: var(--text);
-      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+      border: 1px solid var(--border);
+      border-top: 2px solid transparent;
+      padding: 24px 22px 20px;
+      position: relative;
+      border-radius: 3px;
+      transition: filter 0.65s ease, opacity 0.65s ease, transform 0.65s ease, background 0.35s, border-color 0.35s;
+      cursor: default;
+    }
+    .hcard.dim { filter: blur(2.5px); opacity: 0.25; transform: scale(0.96); }
+    .hcard.active:nth-child(1) { border-top-color: var(--accent); }
+    .hcard.active:nth-child(2) { border-top-color: var(--accent2); }
+    .hcard.active:nth-child(3) { border-top-color: var(--accent3); }
+
+    /* extension icon — 3px bigger than previous 36px = 39px */
+    .hcard-icon { width: 39px; height: 39px; border-radius: 9px; margin-bottom: 14px; display: block; object-fit: contain; }
+
+    .hcard-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; display: inline-block; padding: 2px 7px; border-radius: 2px; transition: color 0.35s, background 0.35s; }
+    .hcard:nth-child(1) .hcard-tag { color: var(--accent);  background: rgba(200,240,101,0.09); }
+    .hcard:nth-child(2) .hcard-tag { color: var(--accent2); background: rgba(101,200,240,0.09); }
+    .hcard:nth-child(3) .hcard-tag { color: var(--accent3); background: rgba(240,101,200,0.09); }
+
+    .hcard-title { font-family: 'DM Serif Display', serif; font-size: 17px; line-height: 1.2; margin-bottom: 7px; }
+    .hcard-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; transition: color 0.35s; }
+    .hcard-features { list-style: none; display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px; }
+    .hcard-features li { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 6px; transition: color 0.35s; }
+    .hcard-features li::before { content: '→'; color: var(--border); font-size: 9px; transition: color 0.3s; }
+    .hcard.active .hcard-features li::before { color: var(--muted); }
+
+    /* BROWSER ICONS */
+    .hcard-browsers { display: flex; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); transition: border-color 0.35s; }
+    .hcard-browsers-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--border); letter-spacing: 0.08em; text-transform: uppercase; margin-right: 2px; transition: color 0.3s; }
+    .hcard.active .hcard-browsers-label { color: var(--muted); }
+
+    .browser-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      opacity: 0.3;
+      transition: opacity 0.3s, background 0.2s, border-color 0.35s, transform 0.15s;
       cursor: pointer;
     }
-    .btn-browser:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.09);
-      border-color: var(--accent);
-    }
-    .hero-note {
-      margin-top: 18px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .hero-note a { color: var(--accent); text-decoration: none; }
-    .hero-note a:hover { text-decoration: underline; }
+    .hcard.active .browser-btn { opacity: 0.6; }
+    .hcard.active .browser-btn:hover { opacity: 1; background: var(--surface2); transform: translateY(-1px); }
 
-    /* BROWSER MOCKUP */
-    .hero-right { position: relative; }
-    .demo-browser {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 16px 56px rgba(0,0,0,0.12);
-    }
-    .demo-titlebar {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 11px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-r { background: #ff5f57; }
-    .dot-y { background: #ffbd2e; }
-    .dot-g { background: #28c940; }
-    .demo-url {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 3px 10px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      margin-left: 6px;
-      flex: 1;
-      max-width: 240px;
-    }
-    .demo-body {
-      display: grid;
-      grid-template-columns: 1fr 250px;
-      min-height: 310px;
-    }
-    .demo-feed {
-      border-right: 1px solid var(--border);
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .tweet-card {
-      padding: 10px 11px;
-      border-radius: 9px;
-      border: 1px solid transparent;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .tweet-card.hovered {
-      background: rgba(72,180,207,0.07);
-      border-color: rgba(72,180,207,0.35);
-    }
-    .tweet-row { display: flex; gap: 9px; }
-    .tweet-avi {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--bg2); flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
-    .tweet-content { flex: 1; min-width: 0; }
-    .tweet-name { font-weight: 600; font-size: 12px; }
-    .tweet-handle { font-size: 11px; color: var(--muted); }
-    .tweet-text { font-size: 12px; margin-top: 3px; line-height: 1.45; }
-    .tweet-meta { display: flex; gap: 10px; margin-top: 5px; font-size: 11px; color: var(--muted); }
-    .hover-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--accent);
-      letter-spacing: 0.5px;
-      margin-bottom: 3px;
-    }
-    .demo-sidebar { padding: 12px; display: flex; flex-direction: column; }
-    .panel {
-      background: #fff;
-      border: 2px solid var(--accent);
-      border-radius: 10px;
-      overflow: hidden;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .panel-head {
-      padding: 9px 11px 7px;
-      border-bottom: 1px solid #eff3f4;
-      font-weight: 700;
-      font-size: 13px;
-    }
-    .panel-replies { padding: 8px 11px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-    .reply-item { font-size: 11px; }
-    .reply-avi-row { display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }
-    .reply-avi {
-      width: 23px; height: 23px; border-radius: 50%;
-      background: var(--bg2); flex-shrink: 0;
-      font-size: 10px; display: flex; align-items: center; justify-content: center;
-    }
-    .reply-name { font-weight: 600; font-size: 11px; }
-    .reply-handle { font-size: 10px; color: var(--muted); }
-    .reply-text { color: var(--text); line-height: 1.4; font-size: 11px; margin-left: 29px; }
-    .reply-actions { display: flex; gap: 10px; margin-left: 29px; margin-top: 3px; font-size: 10px; color: var(--muted); }
-    .heart { color: var(--pink); }
+    .browser-btn img { width: 15px; height: 15px; object-fit: contain; border-radius: 2px; display: block; }
 
-    /* SECTIONS */
-    .section {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 48px 80px;
-    }
-    .section-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 28px;
-    }
+    /* progress */
+    .hero-progress { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 0 2px; }
+    .h-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); transition: background 0.3s, transform 0.3s; cursor: pointer; }
+    .h-dot.active { background: var(--accent); transform: scale(1.4); }
+    .h-bar { flex: 1; height: 1px; background: var(--border); border-radius: 1px; overflow: hidden; transition: background 0.35s; }
+    .h-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 3s linear, background 0.35s; }
 
-    /* FEATURES */
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-    }
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px;
-    }
-    .feature-icon { font-size: 23px; margin-bottom: 10px; }
-    .feature-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
-    .feature-card p { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
 
-    /* STEPS */
-    .steps { display: flex; flex-direction: column; }
-    .step {
-      display: flex; gap: 22px; align-items: flex-start;
-      padding: 22px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .step:last-child { border-bottom: none; }
-    .step-num {
-      font-family: 'Instrument Serif', serif;
-      font-size: 30px; color: var(--border); line-height: 1; min-width: 38px;
-    }
-    .step-body h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .step-body p { font-size: 13px; color: var(--muted); }
-    .step-code {
-      display: inline-block; margin-top: 7px;
-      font-family: 'DM Mono', monospace; font-size: 11px;
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 5px; padding: 3px 9px; color: var(--text);
-    }
+    /* CONTACT */
+    section { padding: 64px 0; }
+    .divider { height: 1px; background: var(--border); transition: background 0.35s; }
+    .section-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; gap: 28px; }
+    .section-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; margin-top: 4px; transition: color 0.35s; }
+    .section-title { font-family: 'DM Serif Display', serif; font-size: clamp(26px, 3.5vw, 44px); line-height: 1.05; letter-spacing: -0.02em; }
+    .section-title em { font-style: italic; color: var(--accent); transition: color 0.35s; }
 
+    .contact-block { background: var(--surface); padding: 52px 56px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; transition: background 0.35s; }
+    .contact-text .big { font-family: 'DM Serif Display', serif; font-size: 34px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .contact-text .big em { font-style: italic; color: var(--accent); transition: color 0.35s; }
+    .contact-text p { font-size: 13px; color: var(--muted); line-height: 1.7; transition: color 0.35s; }
+    .contact-info { display: flex; flex-direction: column; gap: 16px; }
+    .contact-item { display: flex; flex-direction: column; gap: 3px; padding-bottom: 16px; border-bottom: 1px solid var(--border); transition: border-color 0.35s; }
+    .contact-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .contact-item-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; transition: color 0.35s; }
+    .contact-item-value { font-size: 14px; }
+    .contact-item-value a { color: var(--accent); text-decoration: none; transition: opacity 0.2s, color 0.35s; }
+    .contact-item-value a:hover { opacity: 0.7; }
 
+    footer { border-top: 1px solid var(--border); padding: 20px 0; display: flex; align-items: center; justify-content: space-between; transition: border-color 0.35s; }
+    footer p { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.04em; transition: color 0.35s; }
+    .footer-right { display: flex; gap: 18px; }
+    .footer-right a { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-right a:hover { color: var(--text); }
 
-    /* FOOTER */
-    footer {
-      border-top: 1px solid var(--border);
-      text-align: center;
-      padding: 24px;
-      font-size: 12px;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-    }
-
-    /* ANIMATIONS */
-    @keyframes fade-up {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .hero-eyebrow  { animation: fade-up 0.45s ease both; }
-    .hero-left h1  { animation: fade-up 0.45s 0.08s ease both; }
-    .hero-left > p { animation: fade-up 0.45s 0.16s ease both; }
-    .install-label { animation: fade-up 0.45s 0.22s ease both; }
-    .browser-btns  { animation: fade-up 0.45s 0.28s ease both; }
-    .hero-right    { animation: fade-up 0.55s 0.1s ease both; }
-
-    /* RESPONSIVE */
-    @media (max-width: 900px) {
-      .hero-section { grid-template-columns: 1fr; padding: 40px 24px 52px; gap: 36px; }
-      .hero-right { max-width: 560px; margin: 0 auto; width: 100%; }
-      nav { padding: 14px 20px; }
+    @media (max-width: 820px) {
+      .wrap { padding: 0 20px; }
+      .hero { grid-template-columns: 1fr; min-height: auto; padding: 80px 0 40px; gap: 40px; }
+      .contact-block { grid-template-columns: 1fr; padding: 36px 24px; gap: 28px; }
+      .section-header { flex-direction: column; gap: 6px; }
+      nav { padding: 12px 20px; }
       .nav-links { display: none; }
-      .section, .install-section { padding: 0 20px 60px; }
-    }
-    @media (max-width: 520px) {
-      .demo-body { grid-template-columns: 1fr; }
-      .demo-sidebar { display: none; }
     }
   </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-logo">💬 X Comments Reader <span class="nav-sub">· Browser Extension</span></div>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#how">How it works</a>
-    <span class="nav-badge">v0.1.0</span>
-  </div>
-</nav>
-
-<!-- HERO -->
-<div class="hero-section">
-
-  <!-- LEFT -->
-  <div class="hero-left">
-    <p class="hero-eyebrow">Free · Open Source · No Sign-up</p>
-    <h1>Read replies<br><em>without leaving</em><br>your timeline.</h1>
-    <p>Hover any post on X and its replies appear instantly in the sidebar. No tab switching, no clicks, no loading screens.</p>
-
-    <div class="install-label">Install for your browser</div>
-    <div class="browser-btns">
-      <!-- Firefox -->
-      <a href="#" class="btn-browser">
-        <img src="https://www.firefox.com/media/img/favicons/firefox/browser/favicon-196x196.59e3822720be.png" width="22" height="22" alt="Firefox" style="border-radius:4px;" />
-        Firefox
-      </a>
-      <!-- Chrome -->
-      <a href="#" class="btn-browser">
-        <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" width="22" height="22" alt="Chrome" style="border-radius:4px;" />
-        Chrome
-      </a>
-    </div>
-
-    <p class="hero-note">Loaded as a temporary extension · <a href="#how">How it works ↓</a></p>
-  </div>
-
-  <!-- RIGHT: mockup -->
-  <div class="hero-right">
-    <div class="demo-browser">
-      <div class="demo-titlebar">
-        <div class="dot dot-r"></div>
-        <div class="dot dot-y"></div>
-        <div class="dot dot-g"></div>
-        <div class="demo-url">x.com/home</div>
+  <nav>
+    <div class="nav-left">
+      <a href="#" class="nav-logo">komzin</a>
+      <div class="nav-links">
+        <a href="#contact">Contact</a>
       </div>
-      <div class="demo-body">
-        <div class="demo-feed">
-          <div class="tweet-card hovered">
-            <div class="hover-label">▸ HOVERING</div>
-            <div class="tweet-row">
-              <div class="tweet-avi">🦊</div>
-              <div class="tweet-content">
-                <div><span class="tweet-name">Mia Chen</span> <span class="tweet-handle">@miachen</span></div>
-                <div class="tweet-text">Hot take: tabs should be banned. Everything should open in a sidebar. Change my mind.</div>
-                <div class="tweet-meta"><span>💬 142</span><span>🔁 38</span><span>❤️ 910</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="tweet-card">
-            <div class="tweet-row">
-              <div class="tweet-avi">🐻</div>
-              <div class="tweet-content">
-                <div><span class="tweet-name">Dev Patel</span> <span class="tweet-handle">@devpatel</span></div>
-                <div class="tweet-text">Just shipped a feature I've been putting off for 3 months. Feels incredible.</div>
-                <div class="tweet-meta"><span>💬 24</span><span>❤️ 204</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="tweet-card">
-            <div class="tweet-row">
-              <div class="tweet-avi">🌿</div>
-              <div class="tweet-content">
-                <div><span class="tweet-name">Lena H.</span> <span class="tweet-handle">@lena_builds</span></div>
-                <div class="tweet-text">Why does dark mode always look better but feel worse at 2am? genuine question</div>
-                <div class="tweet-meta"><span>💬 57</span><span>❤️ 441</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="demo-sidebar">
-          <div class="panel">
-            <div class="panel-head">💬 Replies</div>
-            <div class="panel-replies">
-              <div class="reply-item">
-                <div class="reply-avi-row">
-                  <div class="reply-avi">🐧</div>
-                  <div><div class="reply-name">Kai R.</div><div class="reply-handle">@kairobot</div></div>
-                </div>
-                <div class="reply-text">Agreed. Sidebars are the future and everyone's sleeping on them.</div>
-                <div class="reply-actions"><span class="heart">♥ 84</span></div>
-              </div>
-              <div class="reply-item">
-                <div class="reply-avi-row">
-                  <div class="reply-avi">🌀</div>
-                  <div><div class="reply-name">Sara M.</div><div class="reply-handle">@saramagic</div></div>
-                </div>
-                <div class="reply-text">Counter-take: vertical tabs in Firefox already do this. The future is now 😌</div>
-                <div class="reply-actions"><span class="heart">♥ 31</span></div>
-              </div>
-              <div class="reply-item">
-                <div class="reply-avi-row">
-                  <div class="reply-avi">⚡</div>
-                  <div><div class="reply-name">Tom B.</div><div class="reply-handle">@tombolt</div></div>
-                </div>
-                <div class="reply-text">Only if the sidebar has its own sidebar. Sidebarception.</div>
-                <div class="reply-actions"><span>♥ 12</span></div>
-              </div>
-            </div>
-          </div>
+    </div>
+    <div class="theme-btn-wrap">
+      <span class="theme-label" id="theme-label">Dark</span>
+      <div class="theme-btn" id="themeBtn"></div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="wrap">
+    <div class="hero">
+
+      <div class="hero-left">
+        <div class="hero-eyebrow">Browser Extensions</div>
+        <h1 class="hero-title">Nothing professional,<br><em>just curiosity.</em></h1>
+        <p class="hero-sub">Handcrafted browser extensions that quietly make the web work better. No bloat, no nonsense.</p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn-primary">Get in touch</a>
+          <a href="https://github.com/komzin" target="_blank" class="btn-secondary">GitHub ↗</a>
         </div>
       </div>
+
+      <div class="hero-right">
+        <div class="hero-carousel-outer">
+          <div class="hero-carousel-track" id="htrack">
+
+            <!-- Card 1: NotebookLM -->
+            <div class="hcard active">
+              <img class="hcard-icon" src="https://whale-store.pstatic.net/20260313_55/1773396258167RGlP1_PNG/iconSize.png" alt="NotebookLM PDF Exporter" />
+              <span class="hcard-tag">Productivity</span>
+              <h3 class="hcard-title">NotebookLM → PDF Exporter</h3>
+              <p class="hcard-desc">Export your NotebookLM notes and chats to PDF instantly. Clean formatting, one-click.</p>
+              <ul class="hcard-features">
+                <li>Export notes to PDF</li>
+                <li>Export chat history</li>
+                <li>One-click export</li>
+              </ul>
+              <div class="hcard-browsers">
+                <span class="hcard-browsers-label">Get it</span>
+                <a class="browser-btn" href="https://chromewebstore.google.com/detail/notebooklm-pdf-exporter/lgmcbgicieigdnicfjemooocjokahmcb?authuser=1&hl=en" target="_blank" title="Chrome">
+                  <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="Chrome" />
+                </a>
+                <a class="browser-btn" href="https://microsoftedge.microsoft.com/addons/detail/notebooklm-pdf-exporter/omlcfgmkkcncipknajloambgjfjnlhja" target="_blank" title="Edge">
+                  <img src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="Edge" />
+                </a>
+                <a class="browser-btn" href="https://addons.mozilla.org/en-US/firefox/addon/notebooklm-to-pdf-exporter/" target="_blank" title="Firefox">
+                  <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="Firefox" />
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 2: BetterCallSlow -->
+            <div class="hcard dim">
+              <img class="hcard-icon" src="https://lh3.googleusercontent.com/7a9I7qsi_Eavudq6TGmiZ-tUvFt79NKtF8A8Kmx1moCCY8ksmyowv2XagPJKL-ZuzJVcXKzR6jFceOy3RSvvu1mpQw=s60" alt="BetterCallSlow" />
+              <span class="hcard-tag">Audio</span>
+              <h3 class="hcard-title">BetterCallSlow</h3>
+              <p class="hcard-desc">Slow + reverb effects on YouTube, Spotify & SoundCloud. That dreamy sound, everywhere.</p>
+              <ul class="hcard-features">
+                <li>Slow audio playback</li>
+                <li>Reverb effect</li>
+                <li>YouTube, Spotify & more</li>
+              </ul>
+              <div class="hcard-browsers">
+                <span class="hcard-browsers-label">Get it</span>
+                <a class="browser-btn" href="https://chromewebstore.google.com/detail/bettercallslowslow-reverb/pidmlbkdglggfnpiaahbdnpmhaglcmij?hl=en&authuser=1" target="_blank" title="Chrome">
+                  <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="Chrome" />
+                </a>
+                <a class="browser-btn" href="https://microsoftedge.microsoft.com/addons/detail/bettercallslowslow-reve/kgkmkkcgffapaehdpkhodhiclcpockkj" target="_blank" title="Edge">
+                  <img src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="Edge" />
+                </a>
+                <a class="browser-btn" href="https://addons.mozilla.org/en-GB/firefox/addon/slow-reverb-for-youtube/" target="_blank" title="Firefox">
+                  <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="Firefox" />
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 3: Reddit Sidebar -->
+            <div class="hcard dim">
+              <img class="hcard-icon" src="https://lh3.googleusercontent.com/yXGm6R6nIC-je7oE3g0eStv5NOEqTeGsexY-KSfW9R3qkGuqJ5-xfZlKiZcWHKNrkWwUXYcuv6D0f-USX3DPxeCqZA=s60" alt="Sidebar Comments for Reddit" />
+              <span class="hcard-tag">Reddit</span>
+              <h3 class="hcard-title">Sidebar Comments for Reddit</h3>
+              <p class="hcard-desc">Browse Reddit comments without opening new tabs. Stay in flow.</p>
+              <ul class="hcard-features">
+                <li>Inline sidebar viewer</li>
+                <li>No new tabs needed</li>
+                <li>Clean minimal UI</li>
+              </ul>
+              <div class="hcard-browsers">
+                <span class="hcard-browsers-label">Get it</span>
+                <a class="browser-btn" href="https://chromewebstore.google.com/detail/sidebar-comments-for-redd/pnflajboonimbkihdmojfjifofmjmpol?authuser=1&hl=en" target="_blank" title="Chrome">
+                  <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="Chrome" />
+                </a>
+                <a class="browser-btn" href="https://microsoftedge.microsoft.com/addons/detail/sidebar-comments-for-redd/lhgncejhcelnfnfcagjhmionkefiiafn" target="_blank" title="Edge">
+                  <img src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="Edge" />
+                </a>
+                <a class="browser-btn" href="https://addons.mozilla.org/en-GB/firefox/addon/sidebar-comments-for-reddit/" target="_blank" title="Firefox">
+                  <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="Firefox" />
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="hero-progress">
+          <div class="h-dot active" onclick="hGoTo(0)"></div>
+          <div class="h-dot" onclick="hGoTo(1)"></div>
+          <div class="h-dot" onclick="hGoTo(2)"></div>
+          <div class="h-bar"><div class="h-bar-fill" id="hbar"></div></div>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
 
-<!-- FEATURES -->
-<section class="section" id="features">
-  <div class="section-label">What it does</div>
-  <div class="features">
-    <div class="feature-card">
-      <div class="feature-icon">🖱️</div>
-      <h3>Hover to load</h3>
-      <p>Hover over any post and replies appear in the sidebar. No clicks required.</p>
+  <div class="divider"></div>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="section-header reveal">
+        <span class="section-label">Contact</span>
+        <h2 class="section-title">Let's <em>talk.</em></h2>
+      </div>
+      <div class="contact-block reveal">
+        <div class="contact-text">
+          <div class="big">I'm always<br><em>listening.</em></div>
+          <p>Found a bug, have an idea, or just want to chat? I'll actually read it. I'm your friend. 💙</p>
+        </div>
+        <div class="contact-info">
+          <div class="contact-item">
+            <span class="contact-item-label">Email</span>
+            <span class="contact-item-value"><a href="mailto:slowreverb@tuta.io">slowreverb@tuta.io</a></span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-item-label">GitHub</span>
+            <span class="contact-item-value"><a href="https://komzin.github.io" target="_blank">komzin.github.io</a></span>
+          </div>
+          <div class="contact-item">
+            <span class="contact-item-label">Response time</span>
+            <span class="contact-item-value" style="color:var(--muted)">Within a day or two</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">🧵</div>
-      <h3>Thread-aware</h3>
-      <p>Replies are grouped into threads so conversations flow naturally.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">❤️</div>
-      <h3>Like from sidebar</h3>
-      <p>Like any reply directly from the panel with optimistic UI updates.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">↩️</div>
-      <h3>Nested replies</h3>
-      <p>Expand sub-replies inline to go deeper into any thread.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🔒</div>
-      <h3>Your session only</h3>
-      <p>Uses your existing X login. No tokens stored or sent anywhere.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">⚡</div>
-      <h3>Smart cache</h3>
-      <p>Already-fetched replies are cached. Re-hovering is instant.</p>
-    </div>
+  </section>
+
+  <div class="wrap">
+    <footer>
+      <p>© 2025 komzin — All extensions made out of boredom</p>
+      <div class="footer-right">
+        <a href="#contact">Contact</a>
+        <a href="mailto:slowreverb@tuta.io">Email</a>
+      </div>
+    </footer>
   </div>
-</section>
 
-<!-- HOW IT WORKS -->
-<section class="section" id="how">
-  <div class="section-label">How it works</div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">01</div>
-      <div class="step-body">
-        <h3>Hover a tweet on X</h3>
-        <p>The extension watches for <code>mouseover</code> events on tweet cards. After a 400ms debounce, it reads the tweet ID from the timestamp link.</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <div class="step-body">
-        <h3>Fetches replies via X's GraphQL API</h3>
-        <p>Calls <code>TweetDetail</code> using your existing browser session — no extra accounts or API keys.</p>
-        <span class="step-code">GET /i/api/graphql/{queryId}/TweetDetail</span>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <div class="step-body">
-        <h3>Parses the response into threads</h3>
-        <p>The raw JSON is traversed, deduplicated, and grouped into conversation threads — promoted content skipped.</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">04</div>
-      <div class="step-body">
-        <h3>Renders into X's own sidebar</h3>
-        <p>The replies panel is injected into <code>[data-testid="sidebarColumn"]</code> — feels native, not bolted-on.</p>
-      </div>
-    </div>
-  </div>
-</section>
+  <script>
+    // THEME
+    const html = document.documentElement;
+    const themeBtn = document.getElementById('themeBtn');
+    const themeLabel = document.getElementById('theme-label');
+    function setTheme(t) {
+      html.setAttribute('data-theme', t);
+      themeLabel.textContent = t === 'dark' ? 'Dark' : 'Light';
+      localStorage.setItem('theme', t);
+    }
+    setTheme(localStorage.getItem('theme') || 'light');
+    themeBtn.addEventListener('click', () => setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
 
+    // CAROUSEL
+    const track  = document.getElementById('htrack');
+    const hcards = Array.from(track.querySelectorAll('.hcard'));
+    const hdots  = Array.from(document.querySelectorAll('.h-dot'));
+    const hbar   = document.getElementById('hbar');
+    let hCurrent = 0, hTimer;
 
-<footer>
-  X Comments Reader · v0.1.0 · Built with 💬
-</footer>
+    function hCardW() { return hcards[0].offsetWidth + 12; }
+    function hOffset(idx) {
+      const ow = track.parentElement.offsetWidth;
+      return (ow / 2) - (hCardW() / 2) - idx * hCardW();
+    }
+    function hGoTo(idx, bar = true) {
+      hCurrent = idx;
+      track.style.transform = `translateX(${hOffset(idx)}px)`;
+      hcards.forEach((c, i) => { c.classList.toggle('active', i === idx); c.classList.toggle('dim', i !== idx); });
+      hdots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      if (bar) startBar();
+    }
+    function startBar() {
+      clearTimeout(hTimer);
+      hbar.style.transition = 'none';
+      hbar.style.width = '0%';
+      void hbar.offsetWidth;
+      hbar.style.transition = 'width 3s linear';
+      hbar.style.width = '100%';
+      hTimer = setTimeout(() => hGoTo((hCurrent + 1) % hcards.length), 3000);
+    }
+    track.addEventListener('mouseenter', () => {
+      clearTimeout(hTimer);
+      const w = parseFloat(getComputedStyle(hbar).width);
+      const tw = parseFloat(getComputedStyle(hbar.parentElement).width);
+      hbar.style.transition = 'none';
+      hbar.style.width = (w / tw * 100) + '%';
+    });
+    track.addEventListener('mouseleave', startBar);
+    hGoTo(0);
+    window.addEventListener('resize', () => hGoTo(hCurrent, false));
 
-
+    // REVEAL
+    const reveals = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => { if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 60); });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => io.observe(el));
+  </script>
 </body>
 </html>
