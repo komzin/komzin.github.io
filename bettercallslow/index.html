@@ -4,628 +4,708 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>BetterCallSlow — Slow, Reverb & Bass Boost (Real-time)</title>
-  <meta name="description" content="Free browser extension that adds slow + reverb + bass boost to YouTube, Spotify and SoundCloud in real-time." />
-  
+  <title>BetterCallSlow — Slow, Reverb & Bass Boost for YouTube, Spotify & SoundCloud</title>
+  <meta name="description" content="Free browser extension that adds slow + reverb + bass boost to YouTube, Spotify and SoundCloud in real-time. No download, no account — just install and vibe." />
+  <link rel="canonical" href="https://komzin.github.io/bettercallslow/" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #fefcf6;
-      --border: rgba(0, 0, 0, 0.08);
-      --text: #1a1614;
-      --muted: #6b645c;
-      /* Popup Default Accent */
-      --accent: #FF813F; /* BMC Orange, can be dynamically changed */
-      --accent-glow: rgba(255, 129, 63, 0.2);
+      /* Based exactly on index (1).html design */
+      --bg:       #f7f4ee;
+      --surface:  #efebe2;
+      --surface2: #e5e0d5;
+      --border:   rgba(0,0,0,0.08);
+      --border2:  rgba(0,0,0,0.14);
+      --text:     #1a1712;
+      --muted:    #7a7465;
+      --accent:   #81218f;
+      --accent-l: #f5eafa;
+      --red:      #c0392b;
+      --red-l:    #fdf0ee;
       
-      /* Platform Colors */
-      --yt: #ff0000;
-      --sp: #1db954;
-      --sc: #ff5500;
+      /* Demo Player Theme Accent */
+      --demo-accent: #ff0000;
     }
 
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: 'Geist', sans-serif;
-      font-weight: 300;
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Geist', sans-serif; font-weight: 300; line-height: 1.6; overflow-x: hidden; }
 
-    /* Subtle grain texture */
     body::after {
-      content: ""; position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0.03;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
-    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 32px; }
 
-    /* --- NAV --- */
+    /* ── NAV ── */
     nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(254, 252, 246, 0.85); backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(247,244,238,0.92); backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .nav-inner { display: flex; justify-content: space-between; align-items: center; }
-    .nav-brand { display: flex; align-items: center; gap: 8px; font-family: 'Instrument Serif', serif; font-size: 24px; font-style: italic; color: var(--text); text-decoration: none; }
-    .nav-brand img { width: 24px; height: 24px; margin-right: -4px; } /* Adjust logo icon placement */
-    .nav-links { display: flex; gap: 24px; align-items: center; font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
-    .nav-link { color: var(--muted); text-decoration: none; transition: color 0.2s; }
-    .nav-link:hover { color: var(--text); }
-    .btn-nav {
-      background: var(--text); color: var(--bg);
-      padding: 10px 20px; border-radius: 100px; text-decoration: none;
-      transition: all 0.2s ease;
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+    .nav-brand img { width: 24px; height: 24px; border-radius: 6px; }
+    .nav-brand span { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--text); color: #fff;
+      font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 9px 18px; border-radius: 2px; text-decoration: none;
+      transition: background 0.2s;
     }
-    .btn-nav:hover { background: var(--accent); box-shadow: 0 4px 15px var(--accent-glow); }
+    .nav-cta:hover { background: var(--accent); }
 
-    /* --- HERO --- */
-    .hero { padding: 120px 0 60px; text-align: center; border-bottom: 1px solid var(--border); }
-    .indicator {
-      display: inline-block; background: rgba(0,0,0,0.05); color: var(--muted);
-      font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;
-      padding: 6px 14px; border-radius: 100px; margin-bottom: 24px; border: 1px solid var(--border);
+    /* ── HERO ── */
+    .hero { padding: 80px 0 72px; border-bottom: 1px solid var(--border); }
+    .hero-inner { display: grid; grid-template-columns: 1fr auto; gap: 64px; align-items: center; }
+
+    .hero-kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px;
+      background: var(--accent-l); padding: 5px 12px; border-radius: 2px;
     }
-    .hero h1 {
-      font-family: 'Instrument Serif', serif; font-size: clamp(48px, 6vw, 64px);
-      line-height: 1; letter-spacing: -0.03em; margin-bottom: 24px;
+    .hero-kicker::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    .hero-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(38px, 5vw, 62px);
+      line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 20px;
     }
-    .hero p { font-size: 18px; color: var(--muted); max-width: 600px; margin: 0 auto 40px; }
+    .hero-title em { font-style: italic; color: var(--accent); }
+    .hero-sub { font-size: 16px; color: var(--muted); line-height: 1.75; max-width: 480px; margin-bottom: 24px; }
     
-    .hero-btn {
-      background: var(--text); color: var(--bg);
-      font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; text-transform: uppercase;
-      padding: 14px 32px; border-radius: 100px; text-decoration: none;
-      transition: all 0.2s ease;
-      position: relative; /* For wave effect indicator */
+    /* Small Platform Theme Switcher Pills */
+    .platform-pills { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+    .ppill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'Geist Mono', monospace; font-size: 10px;
+      padding: 6px 12px; border-radius: 99px; border: 1px solid var(--border2);
+      background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.2s;
     }
-    .hero-btn:hover { background: var(--accent); box-shadow: 0 4px 15px var(--accent-glow); }
-    .btn-wave::after {
-      content: ""; position: absolute; inset: -10px; border: 1px solid var(--accent); border-radius: 100px; opacity: 0;
-      animation: hero-wave 2s infinite;
-    }
-    @keyframes hero-wave { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.1); } }
+    .ppill img { width: 12px; height: 12px; }
+    .ppill:hover { border-color: var(--text); color: var(--text); }
+    .ppill.active { background: var(--demo-accent); color: #fff; border-color: var(--demo-accent); }
 
-    /* --- BROWSER FRAME DEMO --- */
-    .demo-frame {
-      background: #0f0f0f; border-radius: 20px; overflow: hidden;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.15); margin-top: 40px;
-      border: 1px solid rgba(255,255,255,0.1);
-      position: relative; height: 440px; /* Adjust height */
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 32px; }
+    .btn-install {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--text); color: #fff;
+      font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 14px 26px; border-radius: 2px; text-decoration: none;
+      transition: background 0.2s, box-shadow 0.2s;
     }
-    .demo-header {
-      padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.1);
-      display: flex; gap: 6px;
-    }
-    .demo-dots span { width: 10px; height: 10px; border-radius: 50%; display: block; }
-    .demo-dots span:nth-child(1) { background: #ff5f57; }
-    .demo-dots span:nth-child(2) { background: #febc2e; }
-    .demo-dots span:nth-child(3) { background: #28c840; }
-    .demo-url { flex: 1; background: #000; border-radius: 4px; padding: 6px 12px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #666; margin-left: 12px; text-align: center;}
+    .btn-install:hover { background: var(--accent); box-shadow: 0 4px 20px rgba(129,33,143,0.25); }
+    .btn-install img { width: 16px; height: 16px; filter: brightness(10); }
 
-    .demo-inner { display: grid; grid-template-columns: 1fr 280px; height: calc(100% - 46px); /* Subtract header height */ }
+    .hero-trust {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted);
+    }
+    .hero-trust::before { content: '✓'; color: var(--accent); font-size: 12px; font-weight: 600; }
+
+    /* ── COMBINED MINIPLAYER & POPUP (Hero Right) ── */
+    .hero-demo-widget {
+      width: 300px; flex-shrink: 0;
+      background: #0f0f0f; border: 1px solid var(--border2);
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+      font-family: 'Geist', sans-serif;
+    }
     
-    /* Fake Video Player (local demo.mp3) */
-    .video-player {
-      padding: 32px; border-right: 1px solid rgba(255,255,255,0.1);
-      background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=1000&auto=format&fit=crop');
-      background-size: cover; background-position: center;
-      display: flex; align-items: center; justify-content: center;
-      position: relative; cursor: pointer;
-    }
-    .video-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
-    .play-icon { width: 68px; height: 68px; background: rgba(255,0,0,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 28px; padding-left: 6px; transition: transform 0.2s; }
-    .video-player:hover .play-icon { transform: scale(1.1); background: red; }
-    .track-info { position: absolute; top: 20px; left: 20px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-    .track-info h3 { font-size: 18px; margin-bottom: 4px; }
-    .track-info p { font-size: 13px; color: rgba(255,255,255,0.8); }
+    /* Top: Miniplayer */
+    .hw-player { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .hw-info { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .hw-thumb { width: 44px; height: 44px; border-radius: 6px; background: var(--demo-accent); display: flex; align-items: center; justify-content: center; font-size: 20px; transition: background 0.3s ease; }
+    .hw-text { flex: 1; }
+    .hw-title { font-size: 14px; font-weight: 500; color: #fff; line-height: 1.2; }
+    .hw-sub { font-size: 10px; color: rgba(255,255,255,0.4); font-family: 'Geist Mono', monospace; margin-top: 4px; }
+    .hw-play { width: 36px; height: 36px; border-radius: 50%; background: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #000; font-size: 14px; flex-shrink: 0; transition: transform 0.1s; padding-left: 2px;}
+    .hw-play:hover { transform: scale(1.05); }
 
-    /* Floating Popup Mockup (styled from the image) */
-    .popup-mockup {
-      position: absolute; top: 10px; right: 10px; bottom: 10px; width: 280px;
-      background: #1e1e1e; border-radius: 12px; border: 1px solid #333;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column;
-      z-index: 10; font-family: 'Geist', sans-serif; color: #fff; overflow-y: auto;
-    }
-    .pop-header { padding: 16px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-    .pop-brand { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; }
-    .pop-orient { color: #aaa; background: none; border: none; font-size: 14px; cursor: pointer; }
+    .hw-waveform { height: 36px; background: rgba(255,255,255,0.04); border-radius: 4px; position: relative; cursor: pointer; overflow: hidden; margin-bottom: 8px; }
+    .hw-bars { display: flex; align-items: center; gap: 2px; height: 100%; padding: 0 6px; }
+    .wbar { flex: 1; background: rgba(255,255,255,0.15); border-radius: 2px; min-height: 4px; transition: background 0.1s; }
+    .wbar.played { background: var(--demo-accent); }
+    .hw-progress { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; background: #fff; pointer-events: none; transition: left 0.1s linear;}
     
-    .pop-body { padding: 20px; flex: 1; }
-    
-    /* Faders Logic from earlier code, styled to image */
-    .faders-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 24px; }
-    .fader-group { display: flex; flex-direction: column; align-items: center; flex: 1; }
-    .fader-slider {
-      width: 32px; height: 120px; padding: 0 12px; cursor: ns-resize;
-      display: flex; justify-content: center; position: relative; touch-action: none;
-    }
-    .fader-track { width: 6px; height: 100%; background: #333; border-radius: 4px; position: relative; overflow: visible; }
-    .fader-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--accent); border-radius: 4px; transition: height 0.05s linear; }
-    .fader-handle { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 16px; height: 16px; background: #fff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.5); transition: bottom 0.05s linear; }
-    .fader-footer { text-align: center; margin-top: 12px; }
-    .fader-label { display: block; font-family: 'Geist Mono', monospace; font-size: 9px; color: #aaa; text-transform: uppercase; margin-bottom: 4px; }
-    .fader-value { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; }
+    .hw-time { display: flex; justify-content: space-between; font-family: 'Geist Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.4); }
 
-    /* Reverb Visual (Concentric Circles) */
-    .reverb-visual { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0.15; }
-    .reverb-visual span { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #fff; position: absolute; animation: reverb-out 2s infinite; }
-    .reverb-visual span:nth-child(2) { animation-delay: 0.5s; }
-    .reverb-visual span:nth-child(3) { animation-delay: 1s; }
-    @keyframes reverb-out { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(3); } }
+    /* Bottom: Extension Mockup */
+    .hw-popup { padding: 16px 20px 20px; }
+    .hw-pop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .hw-pop-header span:first-child { font-size: 13px; font-weight: 600; color: #fff; font-family: 'Geist Mono', monospace; }
 
-    /* Bass value display (e.g., +3dB) */
-    .bass-text-group { display: flex; flex-direction: column; align-items: center; }
-    .bass-boost-db { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 4px; }
+    .hw-pop-sliders { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+    .hw-ctrl { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; }
+    .hw-track { width: 24px; height: 110px; display: flex; justify-content: center; align-items: stretch; cursor: ns-resize; touch-action: none; position: relative; }
+    .hw-bg { width: 6px; height: 100%; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; overflow: visible; }
+    .hw-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--demo-accent); border-radius: 4px; pointer-events: none; transition: height 0.05s linear, background 0.3s ease; }
+    .hw-handle { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 14px; height: 14px; background: #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.5); pointer-events: none; transition: bottom 0.05s linear; }
+    .hw-lbl { font-family: 'Geist Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.4); }
+    .hw-val { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--demo-accent); font-weight: 600; transition: color 0.3s ease; }
 
-    /* Presets */
-    .pop-presets { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 24px; }
-    .pop-preset {
-      flex: 1; background: #333; border: 1px solid #444; color: #ccc;
-      padding: 6px 0; border-radius: 4px; font-size: 11px; text-align: center;
-      cursor: pointer; transition: all 0.2s; font-family: 'Geist', sans-serif;
-    }
-    .pop-preset:hover { background: #444; color: #fff; }
-    .pop-preset.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+    .hw-presets { display: flex; gap: 6px; }
+    .hw-preset { flex: 1; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.5); padding: 6px 0; border-radius: 3px; font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: 'Geist', sans-serif; text-align: center; }
+    .hw-preset.active { background: var(--demo-accent); border-color: var(--demo-accent); color: #fff; font-weight: 500; }
 
-    /* BMC */
-    .bmc-button {
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      background: var(--accent); color: #fff; text-decoration: none;
-      padding: 8px; border-radius: 4px; font-size: 12px; font-weight: 500;
-    }
+    /* ── PROBLEM BANNER ── */
+    .problem-bar { background: var(--red-l); border: 1px solid rgba(192,57,43,0.15); padding: 20px 28px; border-radius: 3px; margin: 48px 0; display: flex; gap: 14px; align-items: flex-start; }
+    .problem-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .problem-bar p { font-size: 14px; line-height: 1.65; color: #7a2c22; }
+    .problem-bar strong { color: var(--red); }
 
-    /* --- FEATURE CARDS (Detailed) --- */
-    .features { padding: 60px 0; border-bottom: 1px solid var(--border); }
-    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .card { background: #fff; padding: 24px; border-radius: 3px; border: 1px solid var(--border); transition: border-color 0.2s, background-color 0.2s; }
-    .card:hover { border-color: var(--accent); background-color: var(--surface); }
-    .card-visual { height: 160px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; position: relative; }
-    
-    /* Precision Slow Card */
-    .visual-slow img { width: 100px; }
-    .visual-slow .slow-label { position: absolute; font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--muted); padding: 4px; background: rgba(0,0,0,0.03); border-radius: 2px; }
-    .slow-label.start { top: 0; left: 0; }
-    .slow-label.end { bottom: 0; right: 0; }
-    .slow-wave { position: absolute; width: 60px; height: 10px; background: var(--border); border-radius: 5px; opacity: 0.2; }
-    .slow-wave:nth-child(2) { top: 20%; left: 10%; width: 40px; }
-    .slow-wave:nth-child(3) { bottom: 30%; right: 15%; width: 50px; }
+    /* ── SECTIONS ── */
+    .section { padding: 72px 0; border-top: 1px solid var(--border); }
+    .section-kicker { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(28px, 4vw, 44px); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .section-title em { font-style: italic; color: var(--accent); }
+    .section-sub { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 560px; margin-bottom: 48px; }
 
-    /* Immersive Reverb Card */
-    .visual-reverb span { width: 100px; height: 100px; border-radius: 50%; position: absolute; animation: reverb-diffuse 4s infinite; opacity: 0.1; }
-    .visual-reverb span:nth-child(1) { background: #333; animation-delay: 0s; }
-    .visual-reverb span:nth-child(2) { background: #aaa; animation-delay: 1s; }
-    .visual-reverb span:nth-child(3) { background: #fff; border: 1px solid var(--border); animation-delay: 2s; }
-    @keyframes reverb-diffuse { 0% { transform: scale(1); opacity: 0.1; } 50% { opacity: 0.03; } 100% { transform: scale(1.5); opacity: 0; } }
-    .reverb-label { position: absolute; top: -10px; font-family: 'Geist Mono', monospace; font-size: 8px; color: var(--muted); text-transform: uppercase; }
+    /* ── HOW IT WORKS ── */
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; }
+    .steps::before { content: ''; position: absolute; top: 22px; left: 0; right: 0; height: 1px; background: repeating-linear-gradient(to right, var(--border2) 0, var(--border2) 8px, transparent 8px, transparent 16px); z-index: 0; }
+    .step { padding: 0 20px 0 0; position: relative; z-index: 1; }
+    .step-num { width: 44px; height: 44px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 500; color: var(--accent); margin-bottom: 20px; }
+    .step-title { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 8px; }
+    .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-    /* Powerful Bass Boost Card */
-    .visual-bass img { width: 140px; }
-    .bass-waves { position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; }
-    .bass-waves span { width: 4px; height: 20px; background: var(--text); border-radius: 2px; margin: 0 1px; animation: bass-bar 1s infinite alternate; }
-    .bass-waves span:nth-child(2) { animation-delay: 0.1s; }
-    .bass-waves span:nth-child(3) { animation-delay: 0.2s; height: 30px; }
-    .bass-waves span:nth-child(4) { animation-delay: 0.3s; height: 40px; background: var(--accent); }
-    .bass-waves span:nth-child(5) { animation-delay: 0.2s; height: 30px; }
-    .bass-waves span:nth-child(6) { animation-delay: 0.1s; }
-    @keyframes bass-bar { 0% { transform: scaleY(1); } 100% { transform: scaleY(1.3); } }
+    /* ── FEATURES ── */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .feat { background: var(--surface); padding: 20px 22px; border-top: 2px solid transparent; transition: border-color 0.25s, background 0.2s; }
+    .feat:hover { background: var(--surface2); border-top-color: var(--accent); }
+    .feat-icon { font-size: 18px; margin-bottom: 12px; display: block; }
+    .feat-title { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 6px; }
+    .feat-desc { font-size: 12px; color: var(--muted); line-height: 1.65; }
 
-    .card h2 { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 6px; font-weight: 400; font-style: italic; color: var(--text); }
-    .card p { font-size: 13px; color: var(--muted); }
+    /* ── PRIVACY ── */
+    .privacy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .prv { background: var(--surface); padding: 28px 24px; }
+    .prv-title { font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500; color: var(--accent); margin-bottom: 8px; }
+    .prv-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
 
-    /* --- PLATFORM SELECTION BUTTONS --- */
-    .platforms { padding: 40px 0; text-align: center; }
-    .platform-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .p-btn {
-      background: #fff; border: 1px solid var(--border); border-radius: 3px;
-      padding: 16px; font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;
-      color: var(--muted); cursor: pointer; transition: all 0.2s;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-    }
-    .p-btn:hover { border-color: var(--accent); color: var(--text); background-color: var(--bg); }
-    .p-btn.active { border-color: var(--accent); color: #fff; background-color: var(--text); }
-    .p-btn .logo { width: 16px; height: 16px; margin-bottom: 2px; }
-    .p-btn.active .logo { filter: brightness(100); }
+    /* ── INSTALL STRIP ── */
+    .install-strip { background: var(--surface); border: 1px solid var(--border2); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border-radius: 3px; margin: 48px 0 0; }
+    .install-strip h3 { font-family: 'Instrument Serif', serif; font-size: 24px; margin-bottom: 6px; }
+    .install-strip p { font-size: 13px; color: var(--muted); }
+    .install-browsers { display: flex; gap: 10px; }
+    .ib { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border2); padding: 10px 16px; border-radius: 3px; text-decoration: none; color: var(--text); font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500; transition: border-color 0.2s, background 0.2s; }
+    .ib:hover { border-color: var(--accent); background: var(--accent-l); }
+    .ib img { width: 16px; height: 16px; }
 
-    /* Change accent color based on active platform */
-    .p-btn[data-theme="youtube"]:hover { border-color: var(--yt); --accent: var(--yt); --accent-glow: rgba(255, 0, 0, 0.2); }
-    .p-btn[data-theme="youtube"].active { background-color: var(--yt); border-color: var(--yt); --accent: #fff; }
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 28px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-brand { display: flex; align-items: center; gap: 8px; }
+    .footer-brand img { width: 20px; height: 20px; border-radius: 5px; }
+    .footer-brand span { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .footer-links a { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text); }
 
-    .p-btn[data-theme="spotify"]:hover { border-color: var(--sp); --accent: var(--sp); --accent-glow: rgba(29, 185, 84, 0.2); }
-    .p-btn[data-theme="spotify"].active { background-color: var(--sp); border-color: var(--sp); --accent: #fff; }
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-in.visible { opacity: 1; transform: none; }
 
-    .p-btn[data-theme="soundcloud"]:hover { border-color: var(--sc); --accent: var(--sc); --accent-glow: rgba(255, 85, 0, 0.2); }
-    .p-btn[data-theme="soundcloud"].active { background-color: var(--sc); border-color: var(--sc); --accent: #fff; }
-
-    /* --- FOOTER --- */
-    footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted); }
-
-    /* Responsive adjustments */
-    @media (max-width: 900px) {
-      .demo-inner { grid-template-columns: 1fr; }
-      .video-player { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); height: 260px; }
-      .popup-mockup { position: static; width: 100%; border-radius: 0 0 12px 12px; height: auto; border: none; }
-      .pop-orient { display: none; } /* Orient logic not needed on mobile fader layout */
-      .features-grid { grid-template-columns: 1fr; }
-      .platform-btns { grid-template-columns: 1fr; }
+    @media (max-width: 800px) {
+      .wrap { padding: 0 20px; }
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-demo-widget { margin: 0 auto; }
+      .features-grid, .steps, .privacy-grid { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .install-strip { flex-direction: column; padding: 28px 24px; }
+      .install-browsers { flex-wrap: wrap; justify-content: center;}
+      nav { padding: 12px 20px; }
     }
   </style>
 </head>
 <body>
 
   <nav>
-    <div class="wrap nav-inner">
-      <a href="#" class="nav-brand">BetterCallSlow</a>
-      <div class="nav-links">
-        <a href="#features" class="nav-link">Features</a>
-        <a href="#demo" class="nav-link">How it Works</a>
-        <a href="#" class="btn-nav btn-wave">Add to Chrome</a>
-      </div>
-    </div>
+    <a href="#" class="nav-brand">
+      <img src="https://lh3.googleusercontent.com/7a9I7qsi_Eavudq6TGmiZ-tUvFt79NKtF8A8Kmx1moCCY8ksmyowv2XagPJKL-ZuzJVcXKzR6jFceOy3RSvvu1mpQw=s60" alt="BetterCallSlow icon" />
+      <span>BetterCallSlow</span>
+    </a>
+    <a href="https://chromewebstore.google.com/detail/bettercallslowslow-reverb/pidmlbkdglggfnpiaahbdnpmhaglcmij" target="_blank" class="nav-cta">
+      Add to Chrome — Free
+    </a>
   </nav>
 
-  <header class="hero wrap" id="demo">
-    <div class="indicator">Real-time Processing Activated</div>
-    <h1>Unleash the vibe:<br><em>Shape Your Sound Instantly</em></h1>
-    <p>One extension. Endless control for YouTube, Spotify, and SoundCloud. Slow down, boost the bass, add the perfect reverb—all in real-time.</p>
-    <a href="#" class="hero-btn btn-wave">Add to Chrome - Free</a>
-  </header>
-
-  <section class="demo wrap">
-    <div class="demo-frame">
-      <div class="demo-header">
-        <div class="demo-dots"><span></span><span></span><span></span></div>
-        <div class="demo-url">youtube.com/watch?v=BetterCallSlowDemo</div>
-      </div>
-      
-      <div class="demo-inner">
-        <div class="video-player" id="fakePlayer">
-          <div class="track-info">
-            <h3>Lofi Chill Beat</h3>
-            <p>BetterCallSlow Interactive Demo</p>
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-kicker">Free Browser Extension</div>
+          <h1 class="hero-title">Shape your sound,<br><em>while you listen.</em></h1>
+          <p class="hero-sub">Turn any song into a slowed + reverb masterpiece in real-time. Try the live interactive player on the right to hear it instantly.</p>
+          
+          <div class="platform-pills">
+            <button class="ppill yt active" onclick="setDemoTheme('yt')">
+              <img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt=""/> YouTube
+            </button>
+            <button class="ppill sp" onclick="setDemoTheme('sp')">
+              <img src="https://www.google.com/s2/favicons?domain=spotify.com&sz=32" alt=""/> Spotify
+            </button>
+            <button class="ppill sc" onclick="setDemoTheme('sc')">
+              <img src="https://www.google.com/s2/favicons?domain=soundcloud.com&sz=32" alt=""/> SoundCloud
+            </button>
           </div>
-          <div class="video-overlay">
-            <div class="play-icon" id="playIcon">▶</div>
-          </div>
-        </div>
-        
-        <div class="popup-mockup" id="extPopup">
-          <header class="pop-header">
-            <span class="pop-brand">BetterCallSlow</span>
-            <button class="pop-orient" title="Switch orientation">⇅</button>
-          </header>
-          <div class="pop-body">
-            
-            <div class="faders-row">
-              <div class="fader-group">
-                <div class="fader-slider" id="demo-speed" data-min="0.5" data-max="1.5" data-val="1.0">
-                  <div class="fader-track">
-                    <div class="fader-fill" style="height: 50%"></div>
-                    <div class="fader-handle" style="bottom: 50%"></div>
-                  </div>
-                </div>
-                <div class="fader-footer">
-                  <span class="fader-label">PLAYBACK SPEED (x)</span>
-                  <span class="fader-value" id="val-speed">1.00x</span>
-                </div>
-              </div>
-              <div class="fader-group">
-                <div class="fader-slider" id="demo-reverb" data-min="0" data-max="100" data-val="0">
-                  <div class="fader-track">
-                    <div class="fader-fill" style="height: 0%"></div>
-                    <div class="fader-handle" style="bottom: 0%"></div>
-                    <div class="reverb-visual"><span></span><span></span><span></span></div>
-                  </div>
-                </div>
-                <div class="fader-footer">
-                  <span class="fader-label">SPATIAL REVERB</span>
-                  <span class="fader-value" id="val-reverb">0%</span>
-                </div>
-              </div>
-              <div class="fader-group">
-                <div class="fader-slider" id="demo-bass" data-min="0" data-max="10" data-val="0">
-                  <div class="fader-track">
-                    <div class="fader-fill" style="height: 0%"></div>
-                    <div class="fader-handle" style="bottom: 0%"></div>
-                  </div>
-                </div>
-                <div class="fader-footer bass-text-group">
-                  <span class="fader-label">BASS BOOST</span>
-                  <span class="fader-value">0%</span> <span class="bass-boost-db" id="val-bass">+0dB</span> </div>
-              </div>
-            </div>
 
-            <div class="pop-presets">
-              <button class="pop-preset active" onclick="applyMockupPreset(1.0, 0, 0, this)">Reset</button>
-              <button class="pop-preset" onclick="applyMockupPreset(0.8, 40, 20, this)">Slowed</button>
-              <button class="pop-preset" onclick="applyMockupPreset(1.2, 0, 0, this)">Nightcore</button>
-            </div>
-
-            <a href="https://www.buymeacoffee.com/drinkcoffeetogether" target="_blank" class="bmc-button">
-              <span>☕ can we drink together ❔</span>
+          <div class="hero-actions">
+            <a href="https://chromewebstore.google.com/detail/bettercallslowslow-reverb/pidmlbkdglggfnpiaahbdnpmhaglcmij" target="_blank" class="btn-install">
+              <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" />
+              Add to Chrome — Free
             </a>
+          </div>
+          <div class="hero-trust">Free forever  ·  No account  ·  100% local processing</div>
+        </div>
 
+        <div class="hero-demo-widget">
+          
+          <div class="hw-player">
+            <div class="hw-info">
+              <div class="hw-thumb">🎵</div>
+              <div class="hw-text">
+                <div class="hw-title">Lofi Chill Beat</div>
+                <div class="hw-sub">Live Interactive Demo</div>
+              </div>
+              <button class="hw-play" id="demoPlayBtn" onclick="toggleDemoPlay()">▶</button>
+            </div>
+            <div class="hw-waveform" id="demoWaveform">
+              <div class="hw-bars" id="demoBars"></div>
+              <div class="hw-progress" id="demoProgressLine"></div>
+            </div>
+            <div class="hw-time">
+              <span id="demoTime">0:00 / 0:00</span>
+              <span id="demoStatus">Original</span>
+            </div>
+          </div>
+
+          <div class="hw-popup">
+            <div class="hw-pop-header">
+              <span>BetterCallSlow</span>
+              <span style="color:var(--muted)">⇅</span>
+            </div>
+            <div class="hw-pop-sliders">
+              <div class="hw-ctrl">
+                <div class="hw-track" id="dslider-speed" data-ctrl="speed">
+                  <div class="hw-bg">
+                    <div class="hw-fill" id="dfill-speed" style="height:50%"></div>
+                    <div class="hw-handle" id="dhandle-speed" style="bottom:50%"></div>
+                  </div>
+                </div>
+                <div class="hw-lbl">Speed</div>
+                <div class="hw-val" id="dlbl-speed">1.00x</div>
+              </div>
+              <div class="hw-ctrl">
+                <div class="hw-track" id="dslider-reverb" data-ctrl="reverb">
+                  <div class="hw-bg">
+                    <div class="hw-fill" id="dfill-reverb" style="height:0%"></div>
+                    <div class="hw-handle" id="dhandle-reverb" style="bottom:0%"></div>
+                  </div>
+                </div>
+                <div class="hw-lbl">Reverb</div>
+                <div class="hw-val" id="dlbl-reverb">0%</div>
+              </div>
+              <div class="hw-ctrl">
+                <div class="hw-track" id="dslider-bass" data-ctrl="bass">
+                  <div class="hw-bg">
+                    <div class="hw-fill" id="dfill-bass" style="height:0%"></div>
+                    <div class="hw-handle" id="dhandle-bass" style="bottom:0%"></div>
+                  </div>
+                </div>
+                <div class="hw-lbl">Bass</div>
+                <div class="hw-val" id="dlbl-bass">0%</div>
+              </div>
+            </div>
+            <div class="hw-presets">
+              <button class="hw-preset active" id="dpreset-reset" onclick="applyDemoPreset('reset')">Reset</button>
+              <button class="hw-preset" id="dpreset-slowed" onclick="applyDemoPreset('slowed')">Slowed</button>
+              <button class="hw-preset" id="dpreset-nightcore" onclick="applyDemoPreset('nightcore')">Nightcore</button>
+            </div>
           </div>
         </div>
+
+      </div>
+
+      <div class="problem-bar fade-in">
+        <div class="problem-icon">⚠️</div>
+        <p><strong>YouTube and Spotify have no built-in audio effects.</strong> Close the browser, switch devices, or want a specific vibe — you have to search for unreliable re-uploads. BetterCallSlow applies effects instantly on the original track.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" id="how-it-works">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">How it works</div>
+        <h2 class="section-title">Four steps to your <em>perfect sound</em></h2>
+        <p class="section-sub">From install to vibing in under a minute.</p>
+      </div>
+      <div class="steps fade-in">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">Install the extension</div>
+          <p class="step-desc">Add from Chrome Web Store, Firefox or Edge. No account needed.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">Open your music</div>
+          <p class="step-desc">Play any song on YouTube, Spotify or SoundCloud natively.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Click the icon</div>
+          <p class="step-desc">The popup opens with Speed, Reverb and Bass sliders immediately available.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-title">Drag & vibe</div>
+          <p class="step-desc">Move the sliders in real-time. Changes apply instantly without page reloads.</p>
+        </div>
+      </div>
+
+      <div class="install-strip fade-in">
+        <div>
+          <h3>Ready to slow it down?</h3>
+          <p>Free, takes 5 seconds to install, works immediately.</p>
+        </div>
+        <div class="install-browsers">
+          <a href="https://chromewebstore.google.com/detail/bettercallslowslow-reverb/pidmlbkdglggfnpiaahbdnpmhaglcmij" target="_blank" class="ib">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="Chrome" /> Chrome
+          </a>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="features wrap" id="features">
-    <div class="features-grid">
-      <div class="card">
-        <div class="card-visual visual-slow">
-          <span class="slow-label start">0.5x</span>
-          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M85 50c0-19.3-15.7-35-35-35S15 30.7 15 50s15.7 35 35 35 35-15.7 35-35z' stroke='%231a1614' stroke-width='2' fill='none'/%3E%3Cpath d='M75 50c0 13.8-11.2 25-25 25S25 63.8 25 50' stroke='%231a1614' stroke-width='1.5' fill='none' stroke-dasharray='4 4'/%3E%3Cpath d='M50 25v50m25-25H25' stroke='%231a1614' stroke-width='2'/%3E%3C/svg%3E" alt="turtle/clock logo" />
-          <span class="slow-label end">1.5x</span>
-          <div class="slow-wave"></div><div class="slow-wave"></div><div class="slow-wave"></div>
-        </div>
-        <h2>Precision Slow</h2>
-        <p>Instant speed control for lo-fi vibes or track analysis. No re-upload needed.</p>
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Features</div>
+        <h2 class="section-title">Everything you need to <em>shape your sound</em></h2>
       </div>
-      <div class="card">
-        <div class="card-visual visual-reverb">
-          <div class="reverb-label">Concert Hall</div>
-          <span></span><span></span><span></span>
+      <div class="features-grid fade-in">
+        <div class="feat">
+          <span class="feat-icon">🐢</span>
+          <div class="feat-title">Speed Control</div>
+          <p class="feat-desc">0.5x to 1.5x. Slow it down to 0.8x for the classic slowed vibe or speed it up.</p>
         </div>
-        <h2>Immersive Reverb</h2>
-        <p>Add depth and character. Dial in precise spatial effects for any genre.</p>
-      </div>
-      <div class="card">
-        <div class="card-visual visual-bass">
-          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M80 50A30 30 0 0 1 50 80A30 30 0 0 1 20 50A30 30 0 0 1 80 50Z' fill='%23ccc'/%3E%3Ccircle cx='50' cy='50' r='10' fill='%23fff'/%3E%3C/svg%3E" alt="speaker visual" />
-          <div class="bass-waves"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="feat">
+          <span class="feat-icon">🌊</span>
+          <div class="feat-title">Lush Reverb</div>
+          <p class="feat-desc">Adds a spacious, dreamy room echo. From subtle shimmer to cathedral wash.</p>
         </div>
-        <h2>Powerful Bass Boost</h2>
-        <p>Feel the track. Enhance low-end without distortion, custom filter.</p>
+        <div class="feat">
+          <span class="feat-icon">🔊</span>
+          <div class="feat-title">Bass Boost</div>
+          <p class="feat-desc">Low-band EQ boost up to +10dB. Makes any track hit harder seamlessly.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">⚡</span>
+          <div class="feat-title">One-Click Presets</div>
+          <p class="feat-desc">Jump instantly to Slowed (0.8x + 40% reverb) or Nightcore (1.2x) vibes.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🎨</span>
+          <div class="feat-title">Platform Themes</div>
+          <p class="feat-desc">Popup auto-themes to red on YouTube, green on Spotify, orange on SoundCloud.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🔒</span>
+          <div class="feat-title">100% Private</div>
+          <p class="feat-desc">Audio is processed locally using the Web Audio API. Nothing is uploaded.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="platforms wrap">
-    <div class="platform-btns">
-      <button class="p-btn active" data-theme="spotify">
-        <img src="https://static.cdnlogo.com/logos/s/96/spotify.svg" class="logo" alt="spotify" /> Spotify
-      </button>
-      <button class="p-btn" data-theme="youtube">
-        <img src="https://static.cdnlogo.com/logos/y/57/youtube.svg" class="logo" alt="youtube" /> YouTube
-      </button>
-      <button class="p-btn" data-theme="soundcloud">
-        <img src="https://static.cdnlogo.com/logos/s/95/soundcloud.svg" class="logo" alt="soundcloud" /> SoundCloud
-      </button>
+  <section class="section" id="privacy">
+    <div class="wrap">
+      <div class="fade-in">
+        <div class="section-kicker">Privacy</div>
+        <h2 class="section-title">All processing stays <em>local.</em></h2>
+      </div>
+      <div class="privacy-grid fade-in">
+        <div class="prv">
+          <div class="prv-title">Web Audio API</div>
+          <p class="prv-desc">Effects are applied using your browser's native audio engine. No audio data leaves your device.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">No Data Collection</div>
+          <p class="prv-desc">Zero analytics, zero tracking. We read the audio stream, alter the frequency, and send it back to your speakers.</p>
+        </div>
+        <div class="prv">
+          <div class="prv-title">No Account Required</div>
+          <p class="prv-desc">Install and use immediately. No email, no sign-up, no permissions beyond the active media tab.</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <footer>BetterCallSlow — by komzin</footer>
+  <section class="section">
+    <div class="wrap">
+      <div class="install-strip fade-in" style="text-align:center; display:block; padding: 56px 48px;">
+        <p style="font-family:'Geist Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:14px;">Get started now</p>
+        <h2 style="font-family:'Instrument Serif',serif; font-size:clamp(28px,4vw,44px); letter-spacing:-0.02em; margin-bottom:12px;">Your music, your way.</h2>
+        <p style="font-size:15px; color:var(--muted); max-width:440px; margin: 0 auto 32px; line-height:1.7;">Install in 5 seconds. Transform any track instantly. Free, forever.</p>
+        <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+          <a href="https://chromewebstore.google.com/detail/bettercallslowslow-reverb/pidmlbkdglggfnpiaahbdnpmhaglcmij" target="_blank" class="btn-install">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" /> Add to Chrome — Free
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer>
+      <div class="footer-brand">
+        <img src="https://lh3.googleusercontent.com/7a9I7qsi_Eavudq6TGmiZ-tUvFt79NKtF8A8Kmx1moCCY8ksmyowv2XagPJKL-ZuzJVcXKzR6jFceOy3RSvvu1mpQw=s60" alt="" />
+        <span>BetterCallSlow — by <a href="https://komzin.github.io" style="color:var(--accent); text-decoration:none;">komzin</a></span>
+      </div>
+      <div class="footer-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://komzin.github.io">More extensions</a>
+      </div>
+    </footer>
+  </div>
 
   <script>
-    // --- AUDIO ENGINE ---
-    let audioCtx = null, sourceNode = null, audioBuffer = null;
-    let gainNode, bassFilter, convolverNode, dryGain, wetGain;
-    let isPlaying = false, startTime = 0, pauseOffset = 0;
+  // ── PLATFORM COLOR THEME ─────────────────────────────────────────
+  const PLATFORM_COLORS = { yt: '#ff0000', sp: '#1db954', sc: '#ff5500' };
+
+  function setDemoTheme(p) {
+    const col = PLATFORM_COLORS[p];
+    document.documentElement.style.setProperty('--demo-accent', col);
+    document.querySelectorAll('.ppill').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.ppill.' + p).classList.add('active');
+  }
+  setDemoTheme('yt'); // initial theme
+
+  // ── WAVEFORM BARS ────────────────────────────────────────────────
+  const barsEl = document.getElementById('demoBars');
+  const BAR_COUNT = 45;
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const b = document.createElement('div');
+    b.className = 'wbar';
+    const h = 20 + Math.random() * 60;
+    b.style.height = h + '%';
+    barsEl.appendChild(b);
+  }
+
+  // ── WEB AUDIO ENGINE ─────────────────────────────────────────────
+  let audioCtx = null, sourceNode = null, audioBuffer = null;
+  let gainNode, bassFilter, convolverNode, dryGain, wetGain;
+  let isPlaying = false, startTime = 0, pauseOffset = 0;
+  let rafId = null;
+  let speed = 1.0, reverb = 0.0, bass = 0.0;
+
+  function createAudioCtx() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    gainNode = audioCtx.createGain();
     
-    // Default States
-    let state = { speed: 1.0, reverb: 0, bass: 0 };
+    bassFilter = audioCtx.createBiquadFilter();
+    bassFilter.type = 'lowshelf';
+    bassFilter.frequency.value = 150;
+    bassFilter.gain.value = 0;
 
-    function initAudio() {
-      if (audioCtx) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      
-      gainNode = audioCtx.createGain();
-      
-      bassFilter = audioCtx.createBiquadFilter();
-      bassFilter.type = 'lowshelf';
-      bassFilter.frequency.value = 150;
-      bassFilter.gain.value = 0;
+    convolverNode = audioCtx.createConvolver();
+    convolverNode.buffer = makeImpulse(audioCtx, 2.5, 2.5);
+    dryGain = audioCtx.createGain();
+    wetGain = audioCtx.createGain();
+    dryGain.gain.value = 1;
+    wetGain.gain.value = 0;
 
-      convolverNode = audioCtx.createConvolver();
-      convolverNode.buffer = createImpulse(audioCtx, 2.5, 2.5);
-      
-      dryGain = audioCtx.createGain();
-      wetGain = audioCtx.createGain();
-      dryGain.gain.value = 1;
-      wetGain.gain.value = 0;
+    bassFilter.connect(dryGain);
+    bassFilter.connect(convolverNode);
+    dryGain.connect(gainNode);
+    convolverNode.connect(wetGain);
+    wetGain.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+  }
 
-      bassFilter.connect(dryGain);
-      bassFilter.connect(convolverNode);
-      dryGain.connect(gainNode);
-      convolverNode.connect(wetGain);
-      wetGain.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-    }
-
-    function createImpulse(ctx, duration, decay) {
-      const len = Math.ceil(ctx.sampleRate * duration);
-      const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-      for (let c = 0; c < 2; c++) {
-        const d = buf.getChannelData(c);
-        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+  function makeImpulse(ctx, duration, decay) {
+    const sr = ctx.sampleRate;
+    const len = Math.ceil(sr * duration);
+    const buf = ctx.createBuffer(2, len, sr);
+    for (let c = 0; c < 2; c++) {
+      const d = buf.getChannelData(c);
+      for (let i = 0; i < len; i++) {
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
       }
-      return buf;
     }
+    return buf;
+  }
 
-    async function togglePlay() {
-      const icon = document.getElementById('playIcon');
+  async function loadAudio() {
+    if (audioBuffer) return true;
+    createAudioCtx();
+    try {
+      const res = await fetch('demo.mp3');
+      if (!res.ok) throw new Error('not found');
+      const arr = await res.arrayBuffer();
+      audioBuffer = await audioCtx.decodeAudioData(arr);
+      updateTime(pauseOffset);
+      return true;
+    } catch(e) {
+      document.getElementById('demoTime').textContent = 'demo.mp3 not found';
+      return false;
+    }
+  }
 
-      if (!audioBuffer) {
-        initAudio();
-        icon.textContent = "⏳";
-        icon.style.fontSize = "24px";
-        icon.style.paddingLeft = "0";
-        try {
-          const res = await fetch('demo.mp3'); 
-          if (!res.ok) throw new Error("File not found");
-          const arrayBuffer = await res.arrayBuffer();
-          audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-        } catch(e) {
-          alert("Make sure you place a file named 'demo.mp3' in the same folder!");
-          icon.textContent = "▶";
-          icon.style.fontSize = "28px";
-          icon.style.paddingLeft = "6px";
-          return;
-        }
-      }
+  function playAudio(offset) {
+    if (!audioBuffer) return;
+    if (sourceNode) { try { sourceNode.stop(); } catch(e){} }
+    sourceNode = audioCtx.createBufferSource();
+    sourceNode.buffer = audioBuffer;
+    sourceNode.playbackRate.value = speed;
+    sourceNode.connect(bassFilter);
+    sourceNode.start(0, offset);
+    startTime = audioCtx.currentTime - offset / speed;
+    isPlaying = true;
+    document.getElementById('demoPlayBtn').textContent = '⏸';
+    rafId = requestAnimationFrame(updateProgress);
+    sourceNode.onended = () => { if (isPlaying) { pauseOffset = 0; stopAudio(false); } };
+  }
 
+  function stopAudio(resetBtn = true) {
+    if (sourceNode) { try { sourceNode.stop(); } catch(e){} sourceNode = null; }
+    isPlaying = false;
+    cancelAnimationFrame(rafId);
+    if (resetBtn) document.getElementById('demoPlayBtn').textContent = '▶';
+  }
+
+  async function toggleDemoPlay() {
+    if (!audioBuffer) {
+      const ok = await loadAudio();
+      if (!ok) return;
       if (audioCtx.state === 'suspended') await audioCtx.resume();
+      pauseOffset = 0;
+      playAudio(0);
+      return;
+    }
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    if (isPlaying) {
+      pauseOffset = (audioCtx.currentTime - startTime) * speed;
+      stopAudio();
+    } else {
+      if (pauseOffset >= audioBuffer.duration) pauseOffset = 0;
+      playAudio(pauseOffset);
+    }
+  }
 
-      if (isPlaying) {
-        pauseOffset = (audioCtx.currentTime - startTime) * state.speed;
-        if(sourceNode) {
-            try { sourceNode.stop(); } catch(e){}
-        }
-        isPlaying = false;
-        icon.textContent = "▶";
-        icon.style.fontSize = "28px";
-        icon.style.paddingLeft = "6px";
-      } else {
-        sourceNode = audioCtx.createBufferSource();
-        sourceNode.buffer = audioBuffer;
-        sourceNode.playbackRate.value = state.speed;
-        sourceNode.connect(bassFilter);
-        
-        if (pauseOffset >= audioBuffer.duration) pauseOffset = 0;
-        sourceNode.start(0, pauseOffset);
-        startTime = audioCtx.currentTime - pauseOffset / state.speed;
-        
-        sourceNode.onended = () => { 
-            if(isPlaying){ 
-                isPlaying = false; 
-                icon.textContent = "▶"; 
-                icon.style.fontSize = "28px";
-                icon.style.paddingLeft = "6px";
-                pauseOffset = 0; 
-            }
-        };
-        isPlaying = true;
-        icon.textContent = "⏸";
-        icon.style.fontSize = "24px";
-        icon.style.paddingLeft = "0";
+  function updateProgress() {
+    if (!isPlaying || !audioBuffer) return;
+    const elapsed = (audioCtx.currentTime - startTime) * speed;
+    const pct = Math.min(elapsed / audioBuffer.duration, 1);
+    document.getElementById('demoProgressLine').style.left = (pct * 100) + '%';
+    
+    const bars = document.querySelectorAll('.wbar');
+    const idx = Math.floor(pct * bars.length);
+    bars.forEach((b, i) => b.classList.toggle('played', i < idx));
+    updateTime(elapsed);
+    if (pct < 1) rafId = requestAnimationFrame(updateProgress);
+  }
+
+  function updateTime(elapsed) {
+    const dur = audioBuffer ? audioBuffer.duration : 0;
+    const fmt = s => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; };
+    document.getElementById('demoTime').textContent = fmt(elapsed) + ' / ' + fmt(dur);
+  }
+
+  document.getElementById('demoWaveform').addEventListener('click', async (e) => {
+    if (!audioBuffer) { await loadAudio(); if (!audioBuffer) return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    pauseOffset = pct * audioBuffer.duration;
+    if (isPlaying) playAudio(pauseOffset);
+    else updateProgress();
+  });
+
+  // ── SLIDER LOGIC ─────────────────────────────────────────────────
+  function setSlider(ctrl, pct) {
+    pct = Math.max(0, Math.min(1, pct));
+    const fill   = document.getElementById('dfill-' + ctrl);
+    const handle = document.getElementById('dhandle-' + ctrl);
+    const lbl    = document.getElementById('dlbl-' + ctrl);
+    fill.style.height   = (pct * 100) + '%';
+    handle.style.bottom = (pct * 100) + '%';
+
+    if (ctrl === 'speed') {
+      speed = 0.5 + pct * 1.0; 
+      lbl.textContent = speed.toFixed(2) + 'x';
+      if (sourceNode) sourceNode.playbackRate.value = speed;
+      if (isPlaying && audioBuffer) {
+        const elapsed = (audioCtx.currentTime - startTime) * speed;
+        startTime = audioCtx.currentTime - elapsed / speed;
       }
+    } else if (ctrl === 'reverb') {
+      reverb = pct;
+      lbl.textContent = Math.round(pct * 100) + '%';
+      if (wetGain) wetGain.gain.value = pct;
+      if (dryGain) dryGain.gain.value = 1 - pct * 0.5;
+    } else if (ctrl === 'bass') {
+      bass = pct;
+      lbl.textContent = Math.round(pct * 100) + '%';
+      if (bassFilter) bassFilter.gain.value = pct * 10;
     }
-
-    // Bind Player Click
-    document.getElementById('fakePlayer').addEventListener('click', (e) => {
-        // Prevent click if clicking the extension UI
-        if(e.target.closest('#extPopup')) return;
-        togglePlay();
-    });
-
-    // --- UI & AUDIO UPDATE LOGIC ---
-    function updateAudioEffects() {
-        if(sourceNode) {
-            sourceNode.playbackRate.value = state.speed;
-            if(isPlaying) startTime = audioCtx.currentTime - ((audioCtx.currentTime - startTime) * sourceNode.playbackRate.value) / state.speed;
-        }
-        if(wetGain) {
-            wetGain.gain.value = state.reverb / 100;
-            dryGain.gain.value = 1 - (state.reverb / 100 * 0.5);
-        }
-        if(bassFilter) {
-            bassFilter.gain.value = state.bass; // bass is 0 to 10 db boost
-        }
-    }
-
-    function setVisualFader(id, pct, displayVal, dbVal) {
-      const slider = document.getElementById(`demo-${id}`);
-      slider.querySelector('.fader-fill').style.height = `${pct * 100}%`;
-      slider.querySelector('.fader-handle').style.bottom = `${pct * 100}%`;
-      
-      const valEl = document.getElementById(`val-${id}`);
-      if(id !== 'bass') {
-          valEl.innerText = displayVal;
-      } else {
-          // bass special display: keep % like earlier code display logic, add dB display
-          slider.closest('.fader-group').querySelector('.fader-value').innerText = displayVal; // update % value
-          valEl.innerText = dbVal; // update dB special display
+    
+    document.getElementById('demoStatus').textContent = (speed !== 1.0 || reverb > 0 || bass > 0) ? 'Effects ON' : 'Original';
+    
+    // preset highlighting
+    ['reset','slowed','nightcore'].forEach(id => document.getElementById('dpreset-' + id).classList.remove('active'));
+    const pmap = { 'reset': [1.0,0,0], 'slowed': [0.8,0.4,0], 'nightcore': [1.2,0,0] };
+    Object.entries(pmap).forEach(([id, [s,r,b]]) => {
+      if (Math.abs(speed-s)<0.01 && Math.abs(reverb-r)<0.01 && Math.abs(bass-b)<0.01) {
+          document.getElementById('dpreset-' + id).classList.add('active');
       }
-    }
-
-    function applyMockupPreset(speed, reverb, bass, btnEl) {
-      document.querySelectorAll('.pop-preset').forEach(b => b.classList.remove('active'));
-      btnEl.classList.add('active');
-
-      state.speed = speed;
-      state.reverb = reverb;
-      state.bass = bass; // presets are in dB boost already (e.g. 20db for slowed preset)
-
-      const speedPct = (speed - 0.5) / 1.0; 
-      setVisualFader('speed', speedPct, `${speed.toFixed(2)}x`);
-      setVisualFader('reverb', reverb / 100, `${reverb}%`);
-      
-      // bass presets were in dB (e.g., 20db for slowed), but our sliders work 0-10db.
-      // apply preset values but cap for demo.
-      const cappedBass = Math.min(10, bass);
-      state.bass = cappedBass; // Update actual state with capped value
-      const bassPct = cappedBass / 10;
-      setVisualFader('bass', bassPct, `${Math.round(bassPct * 100)}%`, `+${Math.round(cappedBass)}dB`);
-
-      updateAudioEffects();
-    }
-
-    // Draggable Sliders
-    ['speed', 'reverb', 'bass'].forEach(id => {
-      const slider = document.getElementById(`demo-${id}`);
-      let isDragging = false;
-      
-      const updateFader = (e) => {
-        const rect = slider.getBoundingClientRect();
-        const pct = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
-        
-        let displayVal = '';
-        let dbVal = '';
-        if(id === 'speed') {
-            state.speed = 0.5 + pct * 1.0;
-            displayVal = `${state.speed.toFixed(2)}x`;
-        }
-        if(id === 'reverb') {
-            state.reverb = pct * 100;
-            displayVal = `${Math.round(state.reverb)}%`;
-        }
-        if(id === 'bass') {
-            state.bass = pct * 10; // max 10db boost
-            displayVal = `${Math.round(pct * 100)}%`; // Keep % display like earlier code display logic
-            dbVal = `+${Math.round(pct * 10)}dB`; // New dB special display from design
-        }
-        
-        setVisualFader(id, pct, displayVal, dbVal);
-        document.querySelectorAll('.pop-preset').forEach(b => b.classList.remove('active'));
-        updateAudioEffects();
-      };
-
-      slider.addEventListener('pointerdown', e => { isDragging = true; slider.setPointerCapture(e.pointerId); updateFader(e); });
-      slider.addEventListener('pointermove', e => { if (isDragging) updateFader(e); });
-      slider.addEventListener('pointerup', e => { isDragging = false; slider.releasePointerCapture(e.pointerId); });
     });
+  }
 
-    // --- PLATFORM THEMES ---
-    const popupRoot = document.documentElement; // For dynamic CSS variables on popup elements
-    document.querySelectorAll('.p-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const theme = btn.dataset.theme;
-            if(theme === 'youtube') {
-                popupRoot.style.setProperty('--accent', 'var(--yt)');
-                popupRoot.style.setProperty('--accent-glow', 'rgba(255, 0, 0, 0.2)');
-            } else if (theme === 'spotify') {
-                popupRoot.style.setProperty('--accent', 'var(--sp)');
-                popupRoot.style.setProperty('--accent-glow', 'rgba(29, 185, 84, 0.2)');
-            } else if (theme === 'soundcloud') {
-                popupRoot.style.setProperty('--accent', 'var(--sc)');
-                popupRoot.style.setProperty('--accent-glow', 'rgba(255, 85, 0, 0.2)');
-            }
-        });
+  function applyDemoPreset(preset) {
+    const presets = { reset: [1.0,0,0], slowed: [0.8,0.4,0], nightcore: [1.2,0,0] };
+    const [s,r,b] = presets[preset];
+    setSlider('speed', (s - 0.5) / 1.0);
+    setSlider('reverb', r);
+    setSlider('bass', b);
+  }
+
+  ['speed','reverb','bass'].forEach(ctrl => {
+    const wrap = document.getElementById('dslider-' + ctrl);
+    let dragging = false;
+    const getPercent = (e) => {
+      const rect = wrap.querySelector('.hw-bg').getBoundingClientRect();
+      return Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
+    };
+    wrap.addEventListener('pointerdown', e => { dragging = true; wrap.setPointerCapture(e.pointerId); setSlider(ctrl, getPercent(e)); });
+    wrap.addEventListener('pointermove', e => { if (dragging) setSlider(ctrl, getPercent(e)); });
+    wrap.addEventListener('pointerup',   e => { dragging = false; wrap.releasePointerCapture(e.pointerId); });
+    wrap.addEventListener('wheel', e => {
+      e.preventDefault();
+      const curr = ctrl === 'speed' ? (speed - 0.5) : ctrl === 'reverb' ? reverb : bass;
+      setSlider(ctrl, curr + (e.deltaY < 0 ? 0.05 : -0.05));
+    }, { passive: false });
+  });
+
+  // ── SCROLL REVEAL ────────────────────────────────────────────────
+  const els = document.querySelectorAll('.fade-in');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 80);
     });
-    // Set initial theme (Spotify is active in design image)
-    document.querySelector('.p-btn[data-theme="spotify"]').click();
-
+  }, { threshold: 0.08 });
+  els.forEach(el => io.observe(el));
   </script>
 </body>
 </html>
