@@ -106,6 +106,17 @@
     .btn-install:hover { background: var(--accent); box-shadow: 0 4px 20px rgba(129,33,143,0.25); }
     .btn-install img { width: 16px; height: 16px; filter: brightness(10); }
 
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border2); color: var(--muted);
+      font-family: 'Geist Mono', monospace; font-size: 12px;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 13px 22px; border-radius: 2px; text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+    .btn-ghost img { width: 15px; height: 15px; }
+
     .hero-trust {
       display: flex; align-items: center; gap: 6px;
       font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted);
@@ -113,13 +124,41 @@
     .hero-trust::before { content: '✓'; color: var(--accent); font-size: 12px; font-weight: 600; }
 
     /* ── COMBINED MINIPLAYER & POPUP (Hero Right) ── */
+    .hero-widget-wrapper { position: relative; }
+    
     .hero-demo-widget {
       width: 300px; flex-shrink: 0;
       background: #0f0f0f; border: 1px solid var(--border2);
       border-radius: 8px; overflow: hidden;
       box-shadow: 0 16px 40px rgba(0,0,0,0.15);
       font-family: 'Geist', sans-serif;
+      position: relative;
+      z-index: 5;
     }
+
+    /* SVG Annotations (Arrows) */
+    .annotation {
+      position: absolute;
+      font-family: 'Instrument Serif', serif;
+      font-size: 22px;
+      font-style: italic;
+      color: var(--accent);
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .anno-play {
+      top: -45px; right: -10px;
+      flex-direction: row;
+    }
+    .anno-play svg { width: 35px; height: 35px; margin-top: 15px; color: var(--accent); }
+    .anno-slide {
+      bottom: 120px; left: -80px;
+      flex-direction: row;
+    }
+    .anno-slide svg { width: 30px; height: 20px; color: var(--accent); }
     
     /* Top: Miniplayer */
     .hw-player { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
@@ -211,7 +250,7 @@
     .install-strip { background: var(--surface); border: 1px solid var(--border2); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border-radius: 3px; margin: 48px 0 0; }
     .install-strip h3 { font-family: 'Instrument Serif', serif; font-size: 24px; margin-bottom: 6px; }
     .install-strip p { font-size: 13px; color: var(--muted); }
-    .install-browsers { display: flex; gap: 10px; }
+    .install-browsers { display: flex; gap: 10px; flex-wrap: wrap; }
     .ib { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border2); padding: 10px 16px; border-radius: 3px; text-decoration: none; color: var(--text); font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500; transition: border-color 0.2s, background 0.2s; }
     .ib:hover { border-color: var(--accent); background: var(--accent-l); }
     .ib img { width: 16px; height: 16px; }
@@ -232,6 +271,7 @@
       .wrap { padding: 0 20px; }
       .hero-inner { grid-template-columns: 1fr; }
       .hero-demo-widget { margin: 0 auto; }
+      .annotation { display: none; }
       .features-grid, .steps, .privacy-grid, .seo-cards { grid-template-columns: 1fr; }
       .steps::before { display: none; }
       .install-strip { flex-direction: column; padding: 28px 24px; }
@@ -239,9 +279,16 @@
       nav { padding: 12px 20px; }
     }
   </style>
-  <meta name="google-site-verification" content="Vah3jRHjSLwBq2Tf1b84hNEF-T_tASnOJYihFCV7X2I" />
 </head>
 <body>
+
+  <svg style="width:0;height:0;position:absolute;" aria-hidden="true">
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse">
+        <path d="M0,0 L8,4 L0,8" fill="currentColor" />
+      </marker>
+    </defs>
+  </svg>
 
   <nav>
     <a href="#" class="nav-brand">
@@ -262,13 +309,13 @@
           <p class="hero-sub">Turn any song on YouTube, Spotify or SoundCloud into a slowed + reverb version in real-time. No downloads, no re-uploads — just drag the slider and feel it.</p>
           
           <div class="platform-pills">
-            <button class="ppill yt active" onclick="setDemoTheme('yt')">
+            <button class="ppill yt active" onclick="setDemoTheme('yt', true)">
               <img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt=""/> YouTube
             </button>
-            <button class="ppill sp" onclick="setDemoTheme('sp')">
+            <button class="ppill sp" onclick="setDemoTheme('sp', true)">
               <img src="https://www.google.com/s2/favicons?domain=spotify.com&sz=32" alt=""/> Spotify
             </button>
-            <button class="ppill sc" onclick="setDemoTheme('sc')">
+            <button class="ppill sc" onclick="setDemoTheme('sc', true)">
               <img src="https://www.google.com/s2/favicons?domain=soundcloud.com&sz=32" alt=""/> SoundCloud
             </button>
           </div>
@@ -278,74 +325,95 @@
               <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" />
               Add to Chrome — Free
             </a>
+            <a href="https://addons.mozilla.org/en-GB/firefox/addon/slow-reverb-for-youtube/" target="_blank" class="btn-ghost">
+              <img src="https://www.firefox.com/media/img/favicons/firefox/browser/apple-touch-icon.79c2abeb4e35.png" alt="" /> Firefox
+            </a>
+            <a href="https://microsoftedge.microsoft.com/addons/detail/bettercallslowslow-reve/kgkmkkcgffapaehdpkhodhiclcpockkj" target="_blank" class="btn-ghost">
+              <img src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="" /> Edge
+            </a>
           </div>
           <div class="hero-trust">Free forever  ·  No account  ·  100% local processing</div>
         </div>
 
-        <div class="hero-demo-widget">
+        <div class="hero-widget-wrapper">
           
-          <div class="hw-player">
-            <div class="hw-info">
-              <div class="hw-thumb" id="demoThumbIcon">
-                <img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt=""/>
-              </div>
-              <div class="hw-text">
-                <div class="hw-title">Lofi Chill Beat</div>
-                <div class="hw-sub">Live Interactive Demo</div>
-              </div>
-              <button class="hw-play" id="demoPlayBtn" onclick="toggleDemoPlay()">▶</button>
-            </div>
-            <div class="hw-waveform" id="demoWaveform">
-              <div class="hw-bars" id="demoBars"></div>
-              <div class="hw-progress" id="demoProgressLine"></div>
-            </div>
-            <div class="hw-time">
-              <span id="demoTime">0:00 / 0:00</span>
-              <span id="demoStatus">Original</span>
-            </div>
+          <div class="annotation anno-play">
+            <span>click play button</span>
+            <svg viewBox="0 0 40 40">
+               <path d="M0,10 Q20,10 30,35" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+            </svg>
+          </div>
+          <div class="annotation anno-slide">
+            <span>slide it</span>
+            <svg viewBox="0 0 30 20">
+               <path d="M0,15 Q15,15 25,5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+            </svg>
           </div>
 
-          <div class="hw-popup">
-            <div class="hw-pop-header">
-              <span>BetterCallSlow</span>
-              <span style="color:var(--muted)">⇅</span>
-            </div>
-            <div class="hw-pop-sliders">
-              <div class="hw-ctrl">
-                <div class="hw-track" id="dslider-speed" data-ctrl="speed">
-                  <div class="hw-bg">
-                    <div class="hw-fill" id="dfill-speed" style="height:50%"></div>
-                    <div class="hw-handle" id="dhandle-speed" style="bottom:50%"></div>
-                  </div>
+          <div class="hero-demo-widget">
+            <div class="hw-player">
+              <div class="hw-info">
+                <div class="hw-thumb" id="demoThumbIcon">
+                  <img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=32" alt=""/>
                 </div>
-                <div class="hw-lbl">Speed</div>
-                <div class="hw-val" id="dlbl-speed">1.00x</div>
+                <div class="hw-text">
+                  <div class="hw-title">Lofi Chill Beat</div>
+                  <div class="hw-sub">Live Interactive Demo</div>
+                </div>
+                <button class="hw-play" id="demoPlayBtn" onclick="toggleDemoPlay()">▶</button>
               </div>
-              <div class="hw-ctrl">
-                <div class="hw-track" id="dslider-reverb" data-ctrl="reverb">
-                  <div class="hw-bg">
-                    <div class="hw-fill" id="dfill-reverb" style="height:0%"></div>
-                    <div class="hw-handle" id="dhandle-reverb" style="bottom:0%"></div>
-                  </div>
-                </div>
-                <div class="hw-lbl">Reverb</div>
-                <div class="hw-val" id="dlbl-reverb">0%</div>
+              <div class="hw-waveform" id="demoWaveform">
+                <div class="hw-bars" id="demoBars"></div>
+                <div class="hw-progress" id="demoProgressLine"></div>
               </div>
-              <div class="hw-ctrl">
-                <div class="hw-track" id="dslider-bass" data-ctrl="bass">
-                  <div class="hw-bg">
-                    <div class="hw-fill" id="dfill-bass" style="height:0%"></div>
-                    <div class="hw-handle" id="dhandle-bass" style="bottom:0%"></div>
-                  </div>
-                </div>
-                <div class="hw-lbl">Bass</div>
-                <div class="hw-val" id="dlbl-bass">0%</div>
+              <div class="hw-time">
+                <span id="demoTime">0:00 / 0:00</span>
+                <span id="demoStatus">Original</span>
               </div>
             </div>
-            <div class="hw-presets">
-              <button class="hw-preset active" id="dpreset-reset" onclick="applyDemoPreset('reset')">Reset</button>
-              <button class="hw-preset" id="dpreset-slowed" onclick="applyDemoPreset('slowed')">Slowed</button>
-              <button class="hw-preset" id="dpreset-nightcore" onclick="applyDemoPreset('nightcore')">Nightcore</button>
+
+            <div class="hw-popup">
+              <div class="hw-pop-header">
+                <span>BetterCallSlow</span>
+                <span style="color:var(--muted)">⇅</span>
+              </div>
+              <div class="hw-pop-sliders">
+                <div class="hw-ctrl">
+                  <div class="hw-track" id="dslider-speed" data-ctrl="speed">
+                    <div class="hw-bg">
+                      <div class="hw-fill" id="dfill-speed" style="height:50%"></div>
+                      <div class="hw-handle" id="dhandle-speed" style="bottom:50%"></div>
+                    </div>
+                  </div>
+                  <div class="hw-lbl">Speed</div>
+                  <div class="hw-val" id="dlbl-speed">1.00x</div>
+                </div>
+                <div class="hw-ctrl">
+                  <div class="hw-track" id="dslider-reverb" data-ctrl="reverb">
+                    <div class="hw-bg">
+                      <div class="hw-fill" id="dfill-reverb" style="height:0%"></div>
+                      <div class="hw-handle" id="dhandle-reverb" style="bottom:0%"></div>
+                    </div>
+                  </div>
+                  <div class="hw-lbl">Reverb</div>
+                  <div class="hw-val" id="dlbl-reverb">0%</div>
+                </div>
+                <div class="hw-ctrl">
+                  <div class="hw-track" id="dslider-bass" data-ctrl="bass">
+                    <div class="hw-bg">
+                      <div class="hw-fill" id="dfill-bass" style="height:0%"></div>
+                      <div class="hw-handle" id="dhandle-bass" style="bottom:0%"></div>
+                    </div>
+                  </div>
+                  <div class="hw-lbl">Bass</div>
+                  <div class="hw-val" id="dlbl-bass">0%</div>
+                </div>
+              </div>
+              <div class="hw-presets">
+                <button class="hw-preset active" id="dpreset-reset" onclick="applyDemoPreset('reset')">Reset</button>
+                <button class="hw-preset" id="dpreset-slowed" onclick="applyDemoPreset('slowed')">Slowed</button>
+                <button class="hw-preset" id="dpreset-nightcore" onclick="applyDemoPreset('nightcore')">Nightcore</button>
+              </div>
             </div>
           </div>
         </div>
@@ -514,7 +582,20 @@
     sc: '<img src="https://www.google.com/s2/favicons?domain=soundcloud.com&sz=32" alt=""/>' 
   };
 
-  function setDemoTheme(p) {
+  // Auto-switch themes every 2 seconds
+  const themes = ['yt', 'sp', 'sc'];
+  let currentThemeIdx = 0;
+  let themeInterval = setInterval(() => {
+    currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+    setDemoTheme(themes[currentThemeIdx], false);
+  }, 2000);
+
+  function setDemoTheme(p, userInitiated = false) {
+    if (userInitiated && themeInterval) {
+      clearInterval(themeInterval);
+      themeInterval = null;
+    }
+
     const col = PLATFORM_COLORS[p];
     document.documentElement.style.setProperty('--demo-accent', col);
     
@@ -522,10 +603,10 @@
     document.querySelectorAll('.ppill').forEach(btn => btn.classList.remove('active'));
     document.querySelector('.ppill.' + p).classList.add('active');
     
-    // Update thumbnail icon
+    // Update thumbnail icon with glowing effect
     document.getElementById('demoThumbIcon').innerHTML = PLATFORM_ICONS[p];
   }
-  setDemoTheme('yt'); // initial theme
+  setDemoTheme('yt', false); // initial theme
 
   // ── WAVEFORM BARS ────────────────────────────────────────────────
   const barsEl = document.getElementById('demoBars');
@@ -622,6 +703,9 @@
   }
 
   async function toggleDemoPlay() {
+    // Stop auto-cycling theme once user interacts with player
+    if (themeInterval) { clearInterval(themeInterval); themeInterval = null; }
+
     if (!audioBuffer) {
       const ok = await loadAudio();
       if (!ok) return;
@@ -660,6 +744,9 @@
   }
 
   document.getElementById('demoWaveform').addEventListener('click', async (e) => {
+    // Stop auto-cycling theme once user interacts with player
+    if (themeInterval) { clearInterval(themeInterval); themeInterval = null; }
+
     if (!audioBuffer) { await loadAudio(); if (!audioBuffer) return; }
     const rect = e.currentTarget.getBoundingClientRect();
     const pct = (e.clientX - rect.left) / rect.width;
@@ -709,6 +796,9 @@
   }
 
   function applyDemoPreset(preset) {
+    // Stop auto-cycling theme once user interacts with player
+    if (themeInterval) { clearInterval(themeInterval); themeInterval = null; }
+
     const presets = { reset: [1.0,0,0], slowed: [0.8,0.4,0], nightcore: [1.2,0,0] };
     const [s,r,b] = presets[preset];
     setSlider('speed', (s - 0.5) / 1.0);
@@ -723,10 +813,14 @@
       const rect = wrap.querySelector('.hw-bg').getBoundingClientRect();
       return Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
     };
-    wrap.addEventListener('pointerdown', e => { dragging = true; wrap.setPointerCapture(e.pointerId); setSlider(ctrl, getPercent(e)); });
+    wrap.addEventListener('pointerdown', e => { 
+      if (themeInterval) { clearInterval(themeInterval); themeInterval = null; }
+      dragging = true; wrap.setPointerCapture(e.pointerId); setSlider(ctrl, getPercent(e)); 
+    });
     wrap.addEventListener('pointermove', e => { if (dragging) setSlider(ctrl, getPercent(e)); });
     wrap.addEventListener('pointerup',   e => { dragging = false; wrap.releasePointerCapture(e.pointerId); });
     wrap.addEventListener('wheel', e => {
+      if (themeInterval) { clearInterval(themeInterval); themeInterval = null; }
       e.preventDefault();
       const curr = ctrl === 'speed' ? (speed - 0.5) : ctrl === 'reverb' ? reverb : bass;
       setSlider(ctrl, curr + (e.deltaY < 0 ? 0.05 : -0.05));
