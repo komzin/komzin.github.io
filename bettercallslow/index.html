@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>BetterCallSlow — Slow, Reverb & Bass Boost for YouTube & Spotify</title>
+  <meta name="description" content="Free browser extension that adds slow + reverb + bass boost to YouTube, Spotify and SoundCloud in real-time." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #fefcf6;
+      --surface:  #f5f1e8;
+      --surface2: #ece7db;
+      --border:   rgba(0,0,0,0.08);
+      --border2:  rgba(0,0,0,0.14);
+      --text:     #1a1712;
+      --muted:    #7a7465;
+      --accent:   #81218f;
+      --accent-l: #f5eafa;
+      --accent-t: rgba(129,33,143,0.08);
+      --red:      #c0392b;
+      --red-l:    #fdf0ee;
+      
+      /* Popup Specific Colors */
+      --popup-bg: #1e1e1e;
+      --popup-surface: #2a2a2a;
+      --popup-text: #ffffff;
+      --popup-muted: #aaaaaa;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Geist', sans-serif; font-weight: 300; line-height: 1.6; overflow-x: hidden; }
+
+    body::after {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 32px; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(254,252,246,0.92); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+    .nav-brand img { width: 24px; height: 24px; border-radius: 6px; }
+    .nav-brand span { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 500; letter-spacing: -0.01em; }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--accent); color: #fff;
+      font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 9px 18px; border-radius: 2px; text-decoration: none; transition: filter 0.2s;
+    }
+    .nav-cta:hover { filter: brightness(1.12); }
+
+    /* HERO */
+    .hero { padding: 80px 0 72px; border-bottom: 1px solid var(--border); }
+    .hero-inner { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: center; }
+
+    .hero-kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 24px;
+      background: var(--accent-l); padding: 5px 12px; border-radius: 2px;
+    }
+    .hero-kicker::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    .hero-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(38px, 4.5vw, 56px);
+      line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 20px;
+    }
+    .hero-title em { font-style: italic; color: var(--accent); }
+    .hero-sub { font-size: 16px; color: var(--muted); line-height: 1.75; max-width: 480px; margin-bottom: 36px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 32px; }
+
+    .btn-install {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--accent); color: #fff;
+      font-family: 'Geist Mono', monospace; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 14px 26px; border-radius: 2px; text-decoration: none;
+      transition: filter 0.2s, box-shadow 0.2s;
+    }
+    .btn-install:hover { filter: brightness(1.1); box-shadow: 0 4px 20px rgba(129,33,143,0.25); }
+    .btn-install img { width: 16px; height: 16px; filter: brightness(10); }
+
+    .hero-trust {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted);
+    }
+    .hero-trust::before { content: '✓'; color: var(--accent); font-size: 12px; font-weight: 600; }
+
+    /* BROWSER & POPUP MOCKUP (TOP RIGHT) */
+    .hero-browser {
+      background: #0f0f0f; border: 1px solid var(--border2);
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      display: flex; flex-direction: column;
+      height: 400px; position: relative;
+    }
+    .browser-bar {
+      background: #1a1a1a; border-bottom: 1px solid #333;
+      padding: 12px 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .bb-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .bb-dot:nth-child(1) { background: #ff5f57; }
+    .bb-dot:nth-child(2) { background: #febc2e; }
+    .bb-dot:nth-child(3) { background: #28c840; }
+    .bb-url { flex: 1; background: #000; border-radius: 4px; padding: 6px 12px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #666; margin-left: 12px; text-align: center;}
+    .browser-content { flex: 1; position: relative; background: #000; }
+    
+    /* The iframe - FIX FOR ERROR 153 APPLIED HERE */
+    .browser-content iframe { width: 50%; height: 50%; border: none; }
+
+    /* The Extension Popup Hovering */
+    .ext-popup {
+      position: absolute; top: 10px; right: 10px;
+      width: 280px; background: var(--popup-bg); border-radius: 8px;
+      border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      color: var(--popup-text); display: flex; flex-direction: column;
+      z-index: 10; font-family: 'Geist', sans-serif;
+    }
+    .ext-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; border-bottom: 1px solid #333;
+    }
+    .ext-brand { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: #fff; }
+    .ext-orient { color: var(--popup-muted); background: none; border: none; font-size: 14px; cursor: pointer; }
+    
+    .ext-body { padding: 16px; }
+    
+    /* Vertical Sliders styling */
+    .sliders-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+    .control { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .slider {
+      width: 32px; height: 120px; padding: 0 12px; cursor: ns-resize;
+      display: flex; justify-content: center; position: relative;
+    }
+    .slider__track {
+      width: 6px; height: 100%; background: #333; border-radius: 4px;
+      position: relative; overflow: visible;
+    }
+    .slider__fill {
+      position: absolute; bottom: 0; left: 0; width: 100%;
+      background: var(--accent); border-radius: 4px; transition: height 0.1s linear;
+    }
+    .slider__handle {
+      position: absolute; left: 50%; transform: translate(-50%, 50%);
+      width: 16px; height: 16px; background: #fff; border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5); transition: bottom 0.1s linear;
+    }
+    .control__footer { text-align: center; margin-top: 12px; }
+    .control__label { display: block; font-family: 'Geist Mono', monospace; font-size: 9px; color: var(--popup-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .control__value { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--accent); font-weight: 600; }
+
+    /* Presets */
+    .ext-presets { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 16px; }
+    .ext-preset {
+      flex: 1; background: #333; border: 1px solid #444; color: #ccc;
+      padding: 6px 0; border-radius: 4px; font-size: 11px; text-align: center;
+      cursor: pointer; transition: all 0.2s; font-family: 'Geist', sans-serif;
+    }
+    .ext-preset:hover { background: #444; color: #fff; }
+    .ext-preset.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+
+    /* BMC Button */
+    .bmc-button {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: #FF813F; color: #fff; text-decoration: none;
+      padding: 8px; border-radius: 4px; font-size: 12px; font-weight: 500;
+    }
+    .bmc-emoji { font-size: 14px; }
+
+    /* PROBLEM BANNER */
+    .problem-bar {
+      background: var(--red-l); border: 1px solid rgba(192,57,43,0.15);
+      padding: 20px 28px; border-radius: 3px; margin: 48px 0;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .problem-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .problem-bar p { font-size: 14px; line-height: 1.65; color: #7a2c22; }
+    .problem-bar strong { color: var(--red); }
+
+    /* SECTIONS */
+    .section { padding: 72px 0; border-top: 1px solid var(--border); }
+    .section-kicker { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(28px, 4vw, 44px); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .section-title em { font-style: italic; color: var(--accent); }
+    .section-sub { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 560px; margin-bottom: 48px; }
+
+    /* INSTALL STRIP */
+    .install-strip {
+      background: var(--surface); border: 1px solid var(--border2);
+      padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; gap: 32px;
+      border-radius: 3px; margin: 48px 0 0;
+    }
+    .install-strip h3 { font-family: 'Instrument Serif', serif; font-size: 24px; margin-bottom: 6px; }
+    .install-strip p { font-size: 13px; color: var(--muted); }
+    .install-browsers { display: flex; gap: 10px; }
+    .ib {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg); border: 1px solid var(--border2);
+      padding: 10px 16px; border-radius: 3px; text-decoration: none; color: var(--text);
+      font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.03em; transition: border-color 0.2s, background 0.2s;
+    }
+    .ib:hover { border-color: var(--accent); background: var(--accent-l); }
+    .ib img { width: 16px; height: 16px; }
+
+    /* FEATURES */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .feat { background: var(--surface); padding: 20px 22px; border-top: 2px solid transparent; transition: border-color 0.25s, background 0.2s; }
+    .feat:hover { background: var(--surface2); border-top-color: var(--accent); }
+    .feat-icon { font-size: 18px; margin-bottom: 12px; display: block; }
+    .feat-title { font-family: 'Instrument Serif', serif; font-size: 17px; margin-bottom: 6px; }
+    .feat-desc { font-size: 12px; color: var(--muted); line-height: 1.65; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 28px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .footer-brand { display: flex; align-items: center; gap: 8px; }
+    .footer-brand img { width: 20px; height: 20px; border-radius: 5px; }
+    .footer-brand span { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--muted); }
+
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .install-strip { flex-direction: column; padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="nav-brand">
+      <img src="https://lh3.googleusercontent.com/7a9I7qsi_Eavudq6TGmiZ-tUvFt79NKtF8A8Kmx1moCCY8ksmyowv2XagPJKL-ZuzJVcXKzR6jFceOy3RSvvu1mpQw=s60" alt="BetterCallSlow icon" />
+      <span>BetterCallSlow</span>
+    </a>
+    <a href="#" target="_blank" class="nav-cta">
+      Add to Chrome — Free
+    </a>
+  </nav>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-kicker">Free Browser Extension</div>
+          <h1 class="hero-title">Shape your sound,<br><em>right in the browser.</em></h1>
+          <p class="hero-sub">Turn any song on YouTube, Spotify, or SoundCloud into a slowed + reverb masterpiece instantly. Try the interactive demo slider mockup on the right!</p>
+          <div class="hero-actions">
+            <a href="#" target="_blank" class="btn-install">
+              <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" />
+              Add to Chrome — Free
+            </a>
+          </div>
+          <div class="hero-trust">Free forever  ·  No account  ·  Real-time processing</div>
+        </div>
+
+        <div class="hero-browser">
+          <div class="browser-bar">
+            <div class="bb-dot"></div><div class="bb-dot"></div><div class="bb-dot"></div>
+            <div class="bb-url">youtube.com/watch?v=RqIRp4QE-1k</div>
+          </div>
+          <div class="browser-content">
+            <iframe 
+  width="100%" 
+  height="100%" 
+  src="https://www.youtube-nocookie.com/embed/RqIRp4QE-1k?list=RDRqIRp4QE-1k" 
+  title="OutKast - Hey Ya! (Lyrics)" 
+  frameborder="0" 
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+  referrerpolicy="strict-origin-when-cross-origin" 
+  allowfullscreen>
+</iframe>
+            
+            <div class="ext-popup">
+              <header class="ext-header">
+                <span class="ext-brand">BetterCallSlow</span>
+                <button class="ext-orient" title="Switch orientation">⇅</button>
+              </header>
+              <div class="ext-body">
+                
+                <div class="sliders-row">
+                  <div class="control">
+                    <div class="slider" id="demo-speed" data-min="0.5" data-max="1.5" data-val="1.0">
+                      <div class="slider__track">
+                        <div class="slider__fill" style="height: 50%"></div>
+                        <div class="slider__handle" style="bottom: 50%"></div>
+                      </div>
+                    </div>
+                    <div class="control__footer">
+                      <span class="control__label">Speed</span>
+                      <span class="control__value" id="val-speed">1.00x</span>
+                    </div>
+                  </div>
+                  <div class="control">
+                    <div class="slider" id="demo-reverb" data-min="0" data-max="100" data-val="0">
+                      <div class="slider__track">
+                        <div class="slider__fill" style="height: 0%"></div>
+                        <div class="slider__handle" style="bottom: 0%"></div>
+                      </div>
+                    </div>
+                    <div class="control__footer">
+                      <span class="control__label">Reverb</span>
+                      <span class="control__value" id="val-reverb">0%</span>
+                    </div>
+                  </div>
+                  <div class="control">
+                    <div class="slider" id="demo-bass" data-min="0" data-max="100" data-val="0">
+                      <div class="slider__track">
+                        <div class="slider__fill" style="height: 0%"></div>
+                        <div class="slider__handle" style="bottom: 0%"></div>
+                      </div>
+                    </div>
+                    <div class="control__footer">
+                      <span class="control__label">Bass</span>
+                      <span class="control__value" id="val-bass">0%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ext-presets">
+                  <button class="ext-preset active" onclick="applyMockupPreset(1.0, 0, 0, this)">Reset</button>
+                  <button class="ext-preset" onclick="applyMockupPreset(0.8, 40, 0, this)">Slowed</button>
+                  <button class="ext-preset" onclick="applyMockupPreset(1.2, 0, 0, this)">Nightcore</button>
+                </div>
+
+                <a href="https://www.buymeacoffee.com/drinkcoffeetogether" target="_blank" class="bmc-button">
+                  <span class="bmc-emoji">☕</span>
+                  <span class="bmc-text">can we drink together ❔</span>
+                </a>
+                
+                <p style="font-size: 9px; color: #666; text-align: center; margin-top: 10px; line-height: 1.2;">
+                  *Interactive visual demo. Install extension to alter real audio.
+                </p>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="problem-bar">
+        <div class="problem-icon">⚠️</div>
+        <p><strong>Missing your favorite vibes?</strong> Stop hunting for unreliable "slowed + reverb" re-uploads. This extension hooks straight into your browser to process audio on the fly—completely safe and totally free.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="section-kicker">Features</div>
+      <h2 class="section-title">Everything you need to <em>shape your sound</em></h2>
+      <div class="features-grid">
+        <div class="feat">
+          <span class="feat-icon">🐢</span>
+          <div class="feat-title">Speed Control</div>
+          <p class="feat-desc">From 0.5x to 1.5x. Nail that sluggish vaporwave groove or speed it up.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🌊</span>
+          <div class="feat-title">Lush Reverb</div>
+          <p class="feat-desc">Dial in the perfect amount of echo to create a spacious, dreamy atmosphere.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-icon">🔊</span>
+          <div class="feat-title">Bass Boost</div>
+          <p class="feat-desc">Give your tracks the heavy low-end punch they deserve.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="install-strip" style="text-align:center; display:block; padding: 56px 48px;">
+        <h2 style="font-family:'Instrument Serif',serif; font-size:clamp(28px,4vw,44px); margin-bottom:12px;">Get started now.</h2>
+        <p style="font-size:15px; color:var(--muted); max-width:440px; margin: 0 auto 32px;">Install in 5 seconds. Transform your music forever.</p>
+        <div style="display:flex; justify-content:center;">
+          <a href="#" target="_blank" class="btn-install">
+            <img src="https://www.google.com/chrome/static/images/favicons/favicon-96x96.png" alt="" /> Add to Chrome — Free
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer>
+      <div class="footer-brand">
+        <img src="https://lh3.googleusercontent.com/7a9I7qsi_Eavudq6TGmiZ-tUvFt79NKtF8A8Kmx1moCCY8ksmyowv2XagPJKL-ZuzJVcXKzR6jFceOy3RSvvu1mpQw=s60" alt="" />
+        <span>BetterCallSlow — by komzin</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Visual Mockup Logic for Sliders (Does not affect YouTube iframe)
+    function setVisualFader(id, pct, displayVal) {
+      const slider = document.getElementById(`demo-${id}`);
+      slider.querySelector('.slider__fill').style.height = `${pct * 100}%`;
+      slider.querySelector('.slider__handle').style.bottom = `${pct * 100}%`;
+      document.getElementById(`val-${id}`).innerText = displayVal;
+    }
+
+    function applyMockupPreset(speed, reverb, bass, btnEl) {
+      document.querySelectorAll('.ext-preset').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      const speedPct = (speed - 0.5) / 1.0; 
+      setVisualFader('speed', speedPct, `${speed.toFixed(2)}x`);
+      setVisualFader('reverb', reverb / 100, `${reverb}%`);
+      setVisualFader('bass', bass / 100, `${bass}%`);
+    }
+
+    ['speed', 'reverb', 'bass'].forEach(id => {
+      const slider = document.getElementById(`demo-${id}`);
+      let isDragging = false;
+      
+      const updateFader = (e) => {
+        const rect = slider.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
+        
+        let displayVal = '';
+        if(id === 'speed') displayVal = `${(0.5 + pct * 1.0).toFixed(2)}x`;
+        if(id === 'reverb') displayVal = `${Math.round(pct * 100)}%`;
+        if(id === 'bass') displayVal = `${Math.round(pct * 100)}%`;
+        
+        setVisualFader(id, pct, displayVal);
+        document.querySelectorAll('.ext-preset').forEach(b => b.classList.remove('active'));
+      };
+
+      slider.addEventListener('pointerdown', e => { isDragging = true; slider.setPointerCapture(e.pointerId); updateFader(e); });
+      slider.addEventListener('pointermove', e => { if (isDragging) updateFader(e); });
+      slider.addEventListener('pointerup', e => { isDragging = false; slider.releasePointerCapture(e.pointerId); });
+    });
+  </script>
+</body>
+</html>
