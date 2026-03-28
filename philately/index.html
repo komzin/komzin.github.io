@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Philately — Stamp the Web</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #fefcf6;
+      --ink:   #1a1510;
+      --amber: #b87a08;
+      --muted: #6b5f4e;
+      --border: rgba(26,21,16,0.10);
+      --paper: #f2ead8;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'IM Fell English', Georgia, serif;
+      cursor: none;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 9998;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.022;
+    }
+
+    /* stamp cursor — fixed size always */
+    #stamp-cursor {
+      position: fixed;
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 93px;
+      left: -200px; top: -200px;
+      will-change: left, top;
+      filter: drop-shadow(0 3px 12px rgba(0,0,0,0.4));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .page { max-width: 1140px; margin: 0 auto; padding: 0 44px; }
+
+    /* header */
+    header {
+      padding: 22px 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .wordmark {
+      font-family: 'Special Elite', serif;
+      font-size: 17px; letter-spacing: 0.12em;
+      color: var(--ink);
+      display: flex; align-items: center; gap: 11px;
+    }
+
+    .icon-badge {
+      width: 28px; height: 28px;
+      border-radius: 6px; overflow: hidden; flex-shrink: 0;
+    }
+    .icon-badge img { width: 100%; height: 100%; display: block; }
+
+    .postmark-ring {
+      width: 44px; height: 44px;
+      border: 1.5px solid var(--ink);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      font-family: 'Special Elite', serif;
+      font-size: 6px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--ink);
+      opacity: 0.2; transform: rotate(-12deg);
+      line-height: 1.5;
+    }
+
+    /* hero grid */
+    .hero {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 72px;
+      align-items: center;
+      padding: 68px 0 76px;
+    }
+
+    .kicker {
+      font-family: 'Special Elite', serif;
+      font-size: 10px; letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 22px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .kicker::before { content:''; width:28px; height:1px; background:var(--amber); }
+
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 60px; font-weight: 700;
+      line-height: 1.02; letter-spacing: -0.01em;
+      color: var(--ink); margin-bottom: 28px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--amber);
+      text-decoration: underline;
+      text-decoration-style: dashed;
+      text-decoration-color: rgba(184,122,8,0.55);
+      text-underline-offset: 6px;
+      text-decoration-thickness: 2px;
+    }
+
+    .sub {
+      font-size: 16px; color: var(--muted);
+      line-height: 1.9; margin-bottom: 44px;
+      max-width: 360px; font-style: italic;
+    }
+
+    .cta-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 13px 26px;
+      font-family: 'Special Elite', serif;
+      font-size: 12px; letter-spacing: 0.1em;
+      text-decoration: none; border-radius: 3px; cursor: none;
+      transition: transform 0.12s, background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary { background:var(--ink); color:var(--cream); border:2px dashed rgba(254,252,246,0.45); }
+    .btn-primary:hover { background:var(--amber); border-color:rgba(26,15,0,0.35); color:var(--ink); }
+
+    .btn-secondary { background:transparent; color:var(--ink); border:2px dashed rgba(26,21,16,0.28); }
+    .btn-secondary:hover { border-color:var(--amber); color:var(--amber); }
+
+    .btn-icon {
+      width: 16px; height: 16px;
+      object-fit: contain; display: block; flex-shrink: 0;
+    }
+
+    /* browser mockup */
+    .browser-wrap {
+      position: relative;
+      /* padding creates the room around the browser for stamps */
+      padding: 56px 80px;
+    }
+
+    .deco-stamps {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes drift {
+      from { transform: rotate(var(--r)) translateY(0); }
+      to   { transform: rotate(var(--r)) translateY(-9px); }
+    }
+
+    /* real photographic stamps */
+    .real-stamp {
+      position: absolute;
+      animation: drift ease-in-out infinite alternate;
+      animation-duration: var(--dur, 3s);
+      animation-delay: var(--delay, 0s);
+      width: var(--w, 80px);
+      /* perforated stamp frame */
+      background: #fdf9f0;
+      padding: 7px 7px 18px; /* extra bottom for "value" area */
+      box-shadow:
+        0 2px 12px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(0,0,0,0.10);
+      /* perforated edge: radial-gradient holes punched into the background */
+      --hole: radial-gradient(circle at 50% 50%, transparent 42%, #fefcf6 42%);
+      --sz: 11px;
+      -webkit-mask-image:
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) top    left  / var(--sz) var(--sz) repeat-x,
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) bottom left  / var(--sz) var(--sz) repeat-x,
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) top    left  / var(--sz) var(--sz) repeat-y,
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) top    right / var(--sz) var(--sz) repeat-y,
+        linear-gradient(#000,#000) center / calc(100% - var(--sz)) calc(100% - var(--sz)) no-repeat;
+      mask-image:
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) top    left  / var(--sz) var(--sz) repeat-x,
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) bottom left  / var(--sz) var(--sz) repeat-x,
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) top    left  / var(--sz) var(--sz) repeat-y,
+        radial-gradient(circle at 50% 50%, transparent 42%, #000 42%) top    right / var(--sz) var(--sz) repeat-y,
+        linear-gradient(#000,#000) center / calc(100% - var(--sz)) calc(100% - var(--sz)) no-repeat;
+      -webkit-mask-composite: source-over;
+      mask-composite: add;
+    }
+    .real-stamp img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+    .real-stamp .stamp-label {
+      font-family: 'Special Elite', serif;
+      font-size: 8px; letter-spacing: 0.12em;
+      text-align: center;
+      color: #6b5040;
+      margin-top: 4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .browser {
+      position: relative; z-index: 1;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.12);
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.06),
+        0 8px 24px rgba(0,0,0,0.10),
+        0 28px 60px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .browser-chrome {
+      background: #f0eeea;
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .dots { display: flex; gap: 6px; flex-shrink: 0; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+
+    .url-bar {
+      flex: 1; background: #fff;
+      border: 1px solid rgba(0,0,0,0.09); border-radius: 5px;
+      padding: 4px 10px;
+      font-family: 'SF Mono','Fira Code',monospace;
+      font-size: 11px; color: #666; letter-spacing: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .browser-screen {
+      position: relative;
+      background: var(--paper);
+      aspect-ratio: 16 / 9.5;
+      overflow: hidden; cursor: none;
+    }
+
+    /* stamp drops */
+    .stamp-drop {
+      position: absolute; pointer-events: none;
+      animation: land 0.3s cubic-bezier(0.18,0.97,0.46,1) forwards;
+    }
+    @keyframes land {
+      from { opacity:0; transform:scale(0.55) rotate(var(--r)); filter:blur(4px); }
+      to   { opacity:1; transform:scale(1)    rotate(var(--r)); filter:blur(0); }
+    }
+
+    /* perf divider */
+    .perf-divider {
+      display: flex; align-items: center;
+      overflow: hidden; padding: 0 0 48px;
+      opacity: 0.14;
+    }
+    .perf-hole { width:15px; height:15px; border-radius:50%; background:var(--ink); flex-shrink:0; margin:0 2.5px; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: 'Special Elite', serif;
+      font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
+    }
+    footer a { color: var(--amber); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .fade-in { opacity:0; transform:translateY(18px); animation:fi 0.65s ease forwards; }
+    .d1 { animation-delay:0.08s; }
+    .d2 { animation-delay:0.18s; }
+    .d3 { animation-delay:0.28s; }
+    .d4 { animation-delay:0.40s; }
+    @keyframes fi { to { opacity:1; transform:translateY(0); } }
+
+    @media (max-width: 880px) {
+      .hero { grid-template-columns:1fr; gap:40px; padding:40px 0 56px; }
+      h1 { font-size:42px; }
+      .page { padding:0 22px; }
+      footer { flex-direction:column; gap:8px; text-align:center; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="stamp-cursor"></canvas>
+
+<div class="page">
+
+  <header>
+    <div class="wordmark">
+      <div class="icon-badge">
+        <img src="https://lh3.googleusercontent.com/ez8EUQa_sUoqcVf5ZpMrqq_gIHgwZVwLYnSoYWN69PhCg6QnWd__yuhoOh_CwBBDTlqAXLyielteMvD-jBtapMmo-w=s60" alt="Philately icon" />
+      </div>
+      Philately
+    </div>
+    <div class="postmark-ring">
+      <span>Web</span><span>✦</span><span>Stamp</span>
+    </div>
+  </header>
+
+  <section class="hero">
+
+    <div>
+      <p class="kicker fade-in">Chrome · Edge Extension</p>
+      <h1 class="fade-in d1">Stamp<br/>the <em>web.</em></h1>
+      <p class="sub fade-in d2">
+        Hover anywhere on a page, click —<br/>
+        and it becomes a postage stamp.<br/>
+        Perforated edges. Aged paper. Yours.
+      </p>
+      <div class="cta-row fade-in d3">
+        <a href="https://chromewebstore.google.com/detail/ahkekojjneejlcjlaikjkadiieaemafe" target="_blank" class="btn btn-primary">
+          <img class="btn-icon" src="https://chromeenterprise.google/static/favicon.ico" alt="" />
+          Add to Chrome
+        </a>
+        <a href="https://chromewebstore.google.com/detail/ahkekojjneejlcjlaikjkadiieaemafe" target="_blank" class="btn btn-secondary">
+          <img class="btn-icon" src="https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png" alt="" />
+          Add to Edge
+        </a>
+      </div>
+    </div>
+
+    <div class="browser-wrap fade-in d4">
+      <div class="deco-stamps" id="deco-stamps">
+
+        <!-- stamps placed in the padding zone around the browser -->
+        <!-- left column -->
+        <div class="real-stamp" style="left:0px;top:40px;--r:-14deg;--dur:3.1s;--delay:0s;--w:76px;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Penny_black.jpg/250px-Penny_black.jpg" alt="Penny Black" />
+          <div class="stamp-label">Penny Black</div>
+        </div>
+
+        <div class="real-stamp" style="left:4px;top:260px;--r:16deg;--dur:2.7s;--delay:0.5s;--w:70px;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Stamp_UK_Penny_Red_pl148.jpg/250px-Stamp_UK_Penny_Red_pl148.jpg" alt="Penny Red" />
+          <div class="stamp-label">Penny Red</div>
+        </div>
+
+        <!-- right column -->
+        <div class="real-stamp" style="right:0px;top:30px;--r:12deg;--dur:3.4s;--delay:0.2s;--w:74px;">
+          <img src="https://static.wikitide.net/stampswikiwiki/thumb/4/43/BH_PS_2024_LunarHoroscope_Dragon.png/200px-BH_PS_2024_LunarHoroscope_Dragon.png" alt="Dragon stamp" />
+          <div class="stamp-label">Dragon 2024</div>
+        </div>
+
+        <div class="real-stamp" style="right:2px;top:260px;--r:-15deg;--dur:2.9s;--delay:0.7s;--w:78px;">
+          <img src="https://static.wikitide.net/stampswikiwiki/thumb/7/7c/BULGARIA_2024_Europe2024_UnderwaterFloraFauna.png/318px-BULGARIA_2024_Europe2024_UnderwaterFloraFauna.png" alt="Bulgaria stamp" />
+          <div class="stamp-label">Bulgaria</div>
+        </div>
+
+        <!-- top row -->
+        <div class="real-stamp" style="left:120px;top:0px;--r:-9deg;--dur:3.6s;--delay:0.1s;--w:62px;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Stamp_China_1910_3c.jpg?_=20050509173132" alt="China 1910 stamp" />
+          <div class="stamp-label">China 1910</div>
+        </div>
+
+        <!-- bottom row -->
+        <div class="real-stamp" style="right:120px;bottom:0px;--r:18deg;--dur:3.0s;--delay:0.4s;--w:68px;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Mannerheim_on_US_stamp%2C_Champion_of_Liberty.jpg" alt="Mannerheim stamp" />
+          <div class="stamp-label">Mannerheim</div>
+        </div>
+
+      </div>
+
+      <div class="browser">
+        <div class="browser-chrome">
+          <div class="dots">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+          </div>
+          <div class="url-bar">komzin.github.io/philately</div>
+        </div>
+
+        <div class="browser-screen" id="browser-screen">
+          <img
+            src="https://i.ibb.co/PvGQQDVf/2026-03-2822-27-50-ezgif-com-optimize.gif"
+            style="width:100%;height:100%;object-fit:cover;display:block;"
+            alt="Philately demo"
+          />
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <div class="perf-divider" id="perf-divider"></div>
+
+  <footer>
+    <span>© 2025 Philately · komzin</span>
+    <span>
+      <a href="privacypolicy.md">Privacy Policy</a>
+      &nbsp;·&nbsp;
+      <a href="https://chromewebstore.google.com/detail/ahkekojjneejlcjlaikjkadiieaemafe" target="_blank">Chrome Web Store</a>
+    </span>
+  </footer>
+
+</div>
+
+<script>
+const PAD_X  = 0.12, PAD_Y = 0.14, ASPECT = 240/280;
+const CUR_W  = 80, CUR_H = Math.round(CUR_W / ASPECT);
+
+const PAPERS = [
+  "#FAFAF7","#F9F8F2","#F8F7F0","#F5F4E8",
+  "#F3E8C8","#EFE2B8","#EBDDA8","#E3CF88",
+  "#EEE6D8","#E9DFC9","#DDCFAC","#D1BF8F",
+  "#F1F1EA","#E3E3D6","#D8D8C8",
+];
+
+const EDGES = [
+  r=>({toothR:r,      gap:r*0.38,style:"round"}),
+  r=>({toothR:r*0.65, gap:r*0.22,style:"round"}),
+  r=>({toothR:r*1.1,  gap:r*0.9, style:"round"}),
+  r=>({toothR:r*0.9,  gap:r*0.45,style:"square"}),
+  r=>({toothR:r*0.95, gap:r*0.5, style:"tri"}),
+];
+
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+function drawStamp(w, h, paper, patIdx, preview){
+  const dpr=window.devicePixelRatio||1;
+  const cw=Math.round(w*dpr), ch=Math.round(h*dpr);
+  const cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+  const x=cv.getContext('2d');
+  const br=Math.min(cw,ch)*0.034;
+  const {toothR,gap,style}=EDGES[patIdx](br);
+  const step=toothR*2+gap;
+  const op=toothR+1;
+  const ox1=op,oy1=op,ox2=cw-op,oy2=ch-op;
+  const ix1=Math.round(cw*PAD_X),iy1=Math.round(ch*PAD_Y),ix2=cw-ix1,iy2=ch-iy1;
+
+  function rH(fX,tX,y,gl){const d=gl?-1:1,e=Math.abs(tX-fX),n=Math.floor(e/step),o=(e-n*step+gap)/2;let px=fX+d*o;x.lineTo(fX,y);for(let i=0;i<n;i++){const cx=px+d*toothR;x.lineTo(cx-d*(toothR+gap/2),y);x.arc(cx,y,toothR,gl?0:Math.PI,(gl?0:Math.PI)+Math.PI,!gl);x.lineTo(cx+d*(toothR+gap/2),y);px+=d*step;}x.lineTo(tX,y);}
+  function rV(fY,tY,px,gu){const d=gu?-1:1,e=Math.abs(tY-fY),n=Math.floor(e/step),o=(e-n*step+gap)/2;let y=fY+d*o;x.lineTo(px,fY);for(let i=0;i<n;i++){const cy=y+d*toothR;x.lineTo(px,cy-d*(toothR+gap/2));x.arc(px,cy,toothR,gu?Math.PI/2:-Math.PI/2,(gu?Math.PI/2:-Math.PI/2)+Math.PI,!gu);x.lineTo(px,cy+d*(toothR+gap/2));y+=d*step;}x.lineTo(px,tY);}
+  function sH(fX,tX,y,gl){const d=gl?-1:1,e=Math.abs(tX-fX),n=Math.floor(e/step),o=(e-n*step+gap)/2;let px=fX+d*o;const dep=toothR*(gl?-1:1);x.lineTo(fX,y);for(let i=0;i<n;i++){x.lineTo(px,y);x.lineTo(px,y-dep);x.lineTo(px+d*toothR*2,y-dep);x.lineTo(px+d*toothR*2,y);px+=d*step;}x.lineTo(tX,y);}
+  function sV(fY,tY,px,gu){const d=gu?-1:1,e=Math.abs(tY-fY),n=Math.floor(e/step),o=(e-n*step+gap)/2;let y=fY+d*o;const dep=toothR*(gu?1:-1);x.lineTo(px,fY);for(let i=0;i<n;i++){x.lineTo(px,y);x.lineTo(px+dep,y);x.lineTo(px+dep,y+d*toothR*2);x.lineTo(px,y+d*toothR*2);y+=d*step;}x.lineTo(px,tY);}
+  function tH(fX,tX,y,gl){const d=gl?-1:1,e=Math.abs(tX-fX),n=Math.floor(e/step),o=(e-n*step+gap)/2;let px=fX+d*o;const dep=toothR*(gl?1:-1);x.lineTo(fX,y);for(let i=0;i<n;i++){x.lineTo(px+d*toothR,y-dep);x.lineTo(px+d*(toothR*2+gap),y);px+=d*step;}x.lineTo(tX,y);}
+  function tV(fY,tY,px,gu){const d=gu?-1:1,e=Math.abs(tY-fY),n=Math.floor(e/step),o=(e-n*step+gap)/2;let y=fY+d*o;const dep=toothR*(gu?-1:1);x.lineTo(px,fY);for(let i=0;i<n;i++){x.lineTo(px+dep,y+d*toothR);x.lineTo(px,y+d*(toothR*2+gap));y+=d*step;}x.lineTo(px,tY);}
+
+  const eH=style==='square'?sH:style==='tri'?tH:rH;
+  const eV=style==='square'?sV:style==='tri'?tV:rV;
+  function path(){x.beginPath();x.moveTo(ox1,oy1);eH(ox1,ox2,oy1,false);eV(oy1,oy2,ox2,false);eH(ox2,ox1,oy2,true);eV(oy2,oy1,ox1,true);x.closePath();}
+
+  path();
+  if(preview){x.fillStyle='rgba(255,255,255,0.09)';x.fill();x.strokeStyle='rgba(255,255,255,0.72)';x.lineWidth=1.5*dpr;x.stroke();return cv;}
+
+  x.fillStyle=paper;x.fill();
+  x.globalAlpha=0.036;x.fillStyle='#5a3a10';
+  for(let a=0;a<cw;a+=3.5*dpr)for(let b=0;b<ch;b+=3.5*dpr)x.fillRect(a,b,dpr*0.8,dpr*0.8);
+  x.globalAlpha=1;path();
+  x.strokeStyle='rgba(0,0,0,0.24)';x.lineWidth=Math.max(0.8,dpr);x.stroke();
+  const ins=Math.round(2*dpr);
+  x.strokeStyle='rgba(0,0,0,0.10)';x.lineWidth=1.1*dpr;
+  x.strokeRect(ix1+ins,iy1+ins,ix2-ix1-ins*2,iy2-iy1-ins*2);
+  return cv;
+}
+
+/* cursor */
+const curEl=document.getElementById('stamp-cursor');
+const curCtx=curEl.getContext('2d');
+let curPaper=pick(PAPERS), curPat=Math.floor(Math.random()*EDGES.length);
+
+function paintCursor(){
+  const dpr=window.devicePixelRatio||1;
+  curEl.width=Math.round(CUR_W*dpr);curEl.height=Math.round(CUR_H*dpr);
+  curEl.style.width=CUR_W+'px';curEl.style.height=CUR_H+'px';
+  const s=drawStamp(CUR_W,CUR_H,curPaper,curPat,true);
+  curCtx.clearRect(0,0,curEl.width,curEl.height);
+  curCtx.drawImage(s,0,0);
+}
+paintCursor();
+
+let raf=null, mx=-999, my=-999;
+function moveCursor(){curEl.style.left=mx+'px';curEl.style.top=my+'px';raf=null;}
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  if(curEl.style.opacity==='0'||curEl.style.opacity==='')curEl.style.opacity='1';
+  if(!raf)raf=requestAnimationFrame(moveCursor);
+});
+document.addEventListener('mouseleave',()=>{curEl.style.opacity='0';});
+
+/* perforations */
+const pd=document.getElementById('perf-divider');
+for(let i=0;i<90;i++){const h=document.createElement('div');h.className='perf-hole';pd.appendChild(h);}
+
+
+
+document.querySelectorAll('a,button').forEach(el=>el.style.cursor='none');
+</script>
+</body>
+</html>
