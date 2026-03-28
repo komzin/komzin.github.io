@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Philately</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.6;
+    color: #222;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background: #ffffff;
+  }
+  h1, h2 {
+    margin-top: 1.6em;
+  }
+  h1 {
+    font-size: 28px;
+  }
+  h2 {
+    font-size: 20px;
+  }
+  p {
+    margin: 12px 0;
+  }
+  ul {
+    margin: 10px 0 20px 20px;
+  }
+  li {
+    margin-bottom: 8px;
+  }
+  .updated {
+    color: #666;
+    font-style: italic;
+  }
+  code {
+    background: #f4f4f4;
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — Philately</h1>
+<p class="updated">Last updated: 2025</p>
+
+<p>
+Philately is a browser extension that captures parts of webpages as postage stamps.
+This policy describes what data the extension handles and how.
+</p>
+
+<h2>Data Collected</h2>
+<p>Philately collects no personal data. The only information stored is:</p>
+
+<ul>
+  <li><strong>Stamps you create</strong> — PNG images of page regions you explicitly capture, saved to <code>chrome.storage.local</code> on your own device.</li>
+  <li><strong>Stamp frame size</strong> — your last scroll-adjusted stamp size, stored locally so the next capture starts at the same size.</li>
+</ul>
+
+<h2>Data Sharing</h2>
+<p>
+None. No data is sent to any server, third party, or remote service.
+The extension makes no network requests of any kind beyond loading Google Fonts in the popup UI.
+</p>
+
+<h2>Page Content</h2>
+<p>
+The extension reads the visible area of a tab <strong>only at the exact moment you click to capture</strong>,
+using the browser's built-in <code>chrome.tabs.captureVisibleTab</code> API.
+This screenshot is processed entirely in-memory, converted to a stamp PNG,
+and stored locally. It is never uploaded anywhere.
+</p>
+
+<h2>Storage</h2>
+<p>
+All stamps are stored in <code>chrome.storage.local</code>, which is sandboxed to your browser profile
+and never synced to the cloud unless you have Chrome Sync enabled for extension storage
+(which Philately does not request).
+</p>
+
+<h2>Permissions</h2>
+<p>
+Every permission the extension requests is used solely to deliver the stamp-capture feature.
+See the store listing for a full per-permission explanation.
+</p>
+
+<h2>Contact</h2>
+<p>
+Wanna chat or have questions or feature requests? Mail me at 
+<a href="mailto:slowreverb@tuta.io">slowreverb@tuta.io</a>
+</p>
+
+</body>
+</html>
